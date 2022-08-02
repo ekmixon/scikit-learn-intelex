@@ -107,8 +107,7 @@ def map_to_lexicographic(n):
     """
     from itertools import (combinations, count)
     two_class_order_gen = ((j, i) for i in range(n) for j in range(i))
-    reverse_lookup = {key: val for key,
-                      val in zip(two_class_order_gen, count(0))}
+    reverse_lookup = dict(zip(two_class_order_gen, count(0)))
     perm_iter = (reverse_lookup[pair] for pair in combinations(range(n), 2))
     return np.fromiter(perm_iter, dtype=np.intp)
 
@@ -133,7 +132,7 @@ def extract_dual_coef(num_classes, sv_ind_by_clf, sv_coef_by_clf, labels):
     support_ = np.empty((num_unique_sv,), dtype=np.int32)
 
     p = 0
-    for i in range(0, num_classes):
+    for i in range(num_classes):
         for j in range(i + 1, num_classes):
             sv_ind_i_vs_j = sv_ind_by_clf[p]
             sv_coef_i_vs_j = sv_coef_by_clf[p]
@@ -142,10 +141,7 @@ def extract_dual_coef(num_classes, sv_ind_by_clf, sv_coef_by_clf, labels):
             for k, sv_index in enumerate(sv_ind_i_vs_j):
                 label = labels[sv_index]
                 col_index = sv_ind_mapping[sv_index]
-                if j == label:
-                    row_index = i
-                else:
-                    row_index = j - 1
+                row_index = i if j == label else j - 1
                 dual_coef[row_index, col_index] = sv_coef_i_vs_j[k]
                 support_[col_index] = sv_index
 
@@ -162,7 +158,9 @@ def _daal4py_kf(kernel, X_fptype, gamma=1.0, is_sparse=False):
         kf = daal4py.kernel_function_linear(fptype=X_fptype, method=method)
     else:
         raise ValueError(
-            "_daal4py_fit received unexpected kernel specifiction {}.".format(kernel))
+            f"_daal4py_fit received unexpected kernel specifiction {kernel}."
+        )
+
 
     return kf
 
@@ -174,11 +172,12 @@ def _daal4py_check_weight(self, X, y, sample_weight):
         if np.all(sample_weight <= 0):
             raise ValueError(
                 'Invalid input - all samples have zero or negative weights.')
-        if np.any(sample_weight <= 0):
-            if len(np.unique(y[sample_weight > 0])) != len(self.classes_):
-                raise ValueError(
-                    'Invalid input - all samples with positive weights '
-                    'have the same label.')
+        if np.any(sample_weight <= 0) and len(
+            np.unique(y[sample_weight > 0])
+        ) != len(self.classes_):
+            raise ValueError(
+                'Invalid input - all samples with positive weights '
+                'have the same label.')
         ww = sample_weight
     elif self.class_weight is not None:
         ww = np.ones(X.shape[0], dtype=np.float64)
@@ -201,17 +200,16 @@ def _daal4py_svm(fptype, C, accuracyThreshold, tau,
         doShrinking=doShrinking,
         kernel=kernel
     )
-    if nClasses == 2:
-        algo = svm_train
-    else:
-        algo = daal4py.multi_class_classifier_training(
+    return (
+        svm_train
+        if nClasses == 2
+        else daal4py.multi_class_classifier_training(
             nClasses=nClasses,
             fptype=fptype,
             method='oneAgainstOne',
             training=svm_train,
         )
-
-    return algo
+    )
 
 
 def _daal4py_fit(self, X, y_inp, sample_weight, kernel, is_sparse=False):
@@ -341,20 +339,13 @@ def __compute_gamma__(gamma, kernel, X, use_var=True, deprecation=True):
         kernel_uses_gamma = (not callable(kernel) and kernel
                              not in ('linear', 'precomputed'))
         if kernel_uses_gamma:
-            if sp.isspmatrix(X):
-                # var = E[X^2] - E[X]^2
-                X_sc = (X.multiply(X)).mean() - (X.mean())**2
-            else:
-                X_sc = X.var()
+            X_sc = (X.multiply(X)).mean() - (X.mean())**2 if sp.isspmatrix(X) else X.var()
             if not use_var:
                 X_sc = np.sqrt(X_sc)
         else:
             X_sc = 1.0 / X.shape[1]
         if gamma == 'scale':
-            if X_sc != 0:
-                _gamma = 1.0 / (X.shape[1] * X_sc)
-            else:
-                _gamma = 1.0
+            _gamma = 1.0 / (X.shape[1] * X_sc) if X_sc != 0 else 1.0
         else:
             if kernel_uses_gamma and deprecation and not np.isclose(X_sc, 1.0):
                 # NOTE: when deprecation ends we need to remove explicitly
@@ -371,9 +362,9 @@ def __compute_gamma__(gamma, kernel, X, use_var=True, deprecation=True):
         _gamma = 1.0 / X.shape[1]
     elif isinstance(gamma, str) and not deprecation:
         raise ValueError(
-            "When 'gamma' is a string, it should be either 'scale' or "
-            "'auto'. Got '{}' instead.".format(gamma)
+            f"When 'gamma' is a string, it should be either 'scale' or 'auto'. Got '{gamma}' instead."
         )
+
     else:
         _gamma = gamma
 
@@ -427,12 +418,13 @@ def fit(self, X, y, sample_weight=None):
         raise TypeError("Sparse precomputed kernels are not supported.")
     self._sparse = is_sparse and not callable(self.kernel)
 
-    if hasattr(self, 'decision_function_shape'):
-        if self.decision_function_shape not in ('ovr', 'ovo'):
-            raise ValueError(
-                f"decision_function_shape must be either 'ovr' or 'ovo', "
-                f"got {self.decision_function_shape}."
-            )
+    if hasattr(
+        self, 'decision_function_shape'
+    ) and self.decision_function_shape not in ('ovr', 'ovo'):
+        raise ValueError(
+            f"decision_function_shape must be either 'ovr' or 'ovo', "
+            f"got {self.decision_function_shape}."
+        )
 
     if callable(self.kernel):
         check_consistent_length(X, y)
@@ -622,10 +614,15 @@ def predict(self, X):
         y = np.argmax(self.decision_function(X), axis=1)
     else:
         X = self._validate_for_predict(X)
-        _dal_ready = _patching_status.and_conditions([
-            (getattr(self, '_daal_fit', False) and hasattr(self, 'daal_model_'),
-                "oneDAL model was not trained.")])
-        if _dal_ready:
+        if _dal_ready := _patching_status.and_conditions(
+            [
+                (
+                    getattr(self, '_daal_fit', False)
+                    and hasattr(self, 'daal_model_'),
+                    "oneDAL model was not trained.",
+                )
+            ]
+        ):
             if self.probability and self.clf_prob is not None:
                 y = self.clf_prob.predict(X)
             else:
@@ -643,8 +640,7 @@ def _daal4py_predict_proba(self, X):
     if getattr(self, 'clf_prob', None) is None:
         raise NotFittedError(
             "predict_proba is not available when fitted with probability=False")
-    prob = self.clf_prob.predict_proba(X)
-    return prob
+    return self.clf_prob.predict_proba(X)
 
 
 @property
@@ -681,11 +677,7 @@ def predict_proba(self):
     _dal_ready = _patching_status.and_conditions([
         (getattr(self, '_daal_fit', False), "oneDAL model was not trained.")])
     _patching_status.write_log()
-    if _dal_ready:
-        algo = self._daal4py_predict_proba
-    else:
-        algo = self._predict_proba
-    return algo
+    return self._daal4py_predict_proba if _dal_ready else self._predict_proba
 
 
 def decision_function(self, X):

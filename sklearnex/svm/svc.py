@@ -169,14 +169,14 @@ class SVC(sklearn_SVC, BaseSVC):
                 self._class_count = len(np.unique(data[1]))
                 self._is_sparse = sp.isspmatrix(data[0])
             return self.kernel in ['linear', 'rbf'] and \
-                self.class_weight is None and \
-                hasattr(self, '_class_count') and self._class_count == 2 and \
-                hasattr(self, '_is_sparse') and not self._is_sparse
+                    self.class_weight is None and \
+                    hasattr(self, '_class_count') and self._class_count == 2 and \
+                    hasattr(self, '_is_sparse') and not self._is_sparse
         if method_name in ['svm.SVC.predict',
                            'svm.SVC.predict_proba',
                            'svm.SVC.decision_function']:
             return hasattr(self, '_onedal_estimator') and \
-                self._onedal_gpu_supported('svm.SVC.fit', *data)
+                    self._onedal_gpu_supported('svm.SVC.fit', *data)
         raise RuntimeError(f'Unknown method {method_name} in {self.__class__.__name__}')
 
     def _onedal_cpu_supported(self, method_name, *data):

@@ -129,7 +129,6 @@ TYPES = [
 ]
 
 TO_SKIP = [
-    # --------------- NO INFO ---------------
     r'KMeans .*transform',
     r'KMeans .*score',
     r'PCA .*score',
@@ -139,12 +138,12 @@ TO_SKIP = [
     r'LogisticRegressionCV .*predict_proba',
     r'LogisticRegressionCV .*predict_log_proba',
     r'LogisticRegressionCV .*score',
-    # --------------- Scikit ---------------
     r'Ridge float16 predict',
     r'Ridge float16 score',
     r'RandomForestClassifier .*predict_proba',
     r'RandomForestClassifier .*predict_log_proba',
-    r'pairwise_distances .*pairwise_distances',  # except float64
-    r'roc_auc_score .*roc_auc_score' \
-    if not daal_check_version((2021, 'P', 200)) else None,
+    r'pairwise_distances .*pairwise_distances',
+    None
+    if daal_check_version((2021, 'P', 200))
+    else r'roc_auc_score .*roc_auc_score',
 ]

@@ -26,7 +26,7 @@ if __name__ == "__main__":
     d4p.daalinit()
 
     # Each process gets its own data
-    infile = "./data/distributed/pca_normalized_" + str(d4p.my_procid() + 1) + ".csv"
+    infile = f"./data/distributed/pca_normalized_{str(d4p.my_procid() + 1)}.csv"
 
     # configure a PCA object to use svd instead of default correlation
     algo = d4p.pca(method='svdDense', distributed=True)

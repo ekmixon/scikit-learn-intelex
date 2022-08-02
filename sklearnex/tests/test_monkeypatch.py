@@ -20,12 +20,10 @@ import sklearnex
 def test_monkey_patching():
     _tokens = sklearnex.get_patch_names()
     _values = sklearnex.get_patch_map().values()
-    _classes = list()
+    _classes = []
 
     for v in _values:
-        for c in v:
-            _classes.append(c[0])
-
+        _classes.extend(c[0] for c in v)
     sklearnex.patch_sklearn()
 
     for i, _ in enumerate(_tokens):

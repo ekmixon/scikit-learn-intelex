@@ -27,9 +27,9 @@ def set_sklearn_ex_verbose():
                 stream=sys.stdout,
                 format='SKLEARNEX %(levelname)s: %(message)s', level=logLevel.upper())
     except Exception:
-        warnings.warn('Unknown level "{}" for logging.\n'
-                      'Please, use one of "CRITICAL", "ERROR", '
-                      '"WARNING", "INFO", "DEBUG".'.format(logLevel))
+        warnings.warn(
+            f'Unknown level "{logLevel}" for logging.\nPlease, use one of "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG".'
+        )
 
 
 def get_patch_message(s, queue=None, cpu_fallback=False):
@@ -50,10 +50,7 @@ def get_patch_message(s, queue=None, cpu_fallback=False):
             if dev == 'cpu' or dev == 'host' or dev is None:
                 message += 'CPU'
             elif dev == 'gpu':
-                if cpu_fallback:
-                    message += 'CPU'
-                else:
-                    message += 'GPU'
+                message += 'CPU' if cpu_fallback else 'GPU'
             else:
                 raise ValueError(f"Unexpected device name {dev}."
                                  " Supported types are host, cpu and gpu")

@@ -69,27 +69,26 @@ def daal4py_classifier_predict(estimator, X, base_predict):
         (not sp.issparse(X), "X is sparse. Sparse input is not supported.")])
     _patching_status.write_log()
 
-    if _dal_ready:
-        params = {
-            'method': 'defaultDense',
-            'k': estimator.n_neighbors,
-            'nClasses': len(estimator.classes_),
-            'voteWeights': 'voteUniform'
-            if estimator.weights == 'uniform' else 'voteDistance',
-            'resultsToEvaluate': 'computeClassLabels',
-            'resultsToCompute': ''
-        }
+    if not _dal_ready:
+        return base_predict(estimator, X)
 
-        method = parse_auto_method(
-            estimator, estimator.algorithm, estimator.n_samples_fit_, n_features)
-        predict_alg = prediction_algorithm(method, fptype, params)
-        prediction_result = predict_alg.compute(X, daal_model)
-        result = estimator.classes_.take(
-            np.asarray(prediction_result.prediction.ravel(), dtype=np.intp))
-    else:
-        result = base_predict(estimator, X)
+    params = {
+        'method': 'defaultDense',
+        'k': estimator.n_neighbors,
+        'nClasses': len(estimator.classes_),
+        'voteWeights': 'voteUniform'
+        if estimator.weights == 'uniform' else 'voteDistance',
+        'resultsToEvaluate': 'computeClassLabels',
+        'resultsToCompute': ''
+    }
 
-    return result
+    method = parse_auto_method(
+        estimator, estimator.algorithm, estimator.n_samples_fit_, n_features)
+    predict_alg = prediction_algorithm(method, fptype, params)
+    prediction_result = predict_alg.compute(X, daal_model)
+    return estimator.classes_.take(
+        np.asarray(prediction_result.prediction.ravel(), dtype=np.intp)
+    )
 
 
 if sklearn_check_version("0.24"):

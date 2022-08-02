@@ -44,7 +44,7 @@ def build_cpp(cc, cxx, sources, targetprefix, targetname, targetsuffix, libs, li
 
     log.info(f'building cpp target {targetname}...')
 
-    include_dir_plat = ['-I' + incdir for incdir in includes]
+    include_dir_plat = [f'-I{incdir}' for incdir in includes]
     if IS_WIN:
         eca += ['/EHsc']
         lib_prefix = ''
@@ -62,7 +62,7 @@ def build_cpp(cc, cxx, sources, targetprefix, targetname, targetsuffix, libs, li
         lib_prefix = '-l'
         lib_suffix = ''
         obj_ext = '.o'
-        library_dir_plat = ['-L' + libdir for libdir in libdirs]
+        library_dir_plat = [f'-L{libdir}' for libdir in libdirs]
         additional_linker_opts = ['-o', f'{targetprefix}{targetname}{targetsuffix}']
     eca += ['-c']
     libs = [f'{lib_prefix}{str(item)}{lib_suffix}' for item in libs]
@@ -77,10 +77,7 @@ def build_cpp(cc, cxx, sources, targetprefix, targetname, targetsuffix, libs, li
 
     objfiles = [basename(f).replace('.cpp', obj_ext) for f in sources]
     for i, cppfile in enumerate(sources):
-        if IS_WIN:
-            out = [f'/Fo{objfiles[i]}']
-        else:
-            out = ['-o', objfiles[i]]
+        out = [f'/Fo{objfiles[i]}'] if IS_WIN else ['-o', objfiles[i]]
         cmd = [cc] + include_dir_plat + eca + [f'{d4p_dir}/{cppfile}'] + out + defines
         log.info(subprocess.list2cmdline(cmd))
         subprocess.check_call(cmd)
@@ -124,29 +121,25 @@ def custom_build_cmake_clib(iface, cxx=None):
     cmake_args = [
         "cmake",
         cmake_generator,
-        "-S" + builder_directory,
-        "-B" + abs_build_temp_path,
-        "-DCMAKE_CXX_COMPILER=" + cxx,
-        "-DCMAKE_INSTALL_PREFIX=" + install_directory,
-        "-DCMAKE_PREFIX_PATH=" + install_directory,
-        "-DIFACE=" + iface,
-        "-DPYTHON_INCLUDE_DIR=" + python_include,
-        "-DNUMPY_INCLUDE_DIRS=" + numpy_include,
-        "-DPYTHON_LIBRARY_DIR=" + python_library_dir,
+        f"-S{builder_directory}",
+        f"-B{abs_build_temp_path}",
+        f"-DCMAKE_CXX_COMPILER={cxx}",
+        f"-DCMAKE_INSTALL_PREFIX={install_directory}",
+        f"-DCMAKE_PREFIX_PATH={install_directory}",
+        f"-DIFACE={iface}",
+        f"-DPYTHON_INCLUDE_DIR={python_include}",
+        f"-DNUMPY_INCLUDE_DIRS={numpy_include}",
+        f"-DPYTHON_LIBRARY_DIR={python_library_dir}",
         "-DoneDAL_INCLUDE_DIRS=" + jp(os.environ['DALROOT'], 'include'),
         "-DoneDAL_LIBRARY_DIR=" + jp(os.environ['DALROOT'], 'lib', 'intel64'),
-        "-Dpybind11_DIR=" + pybind11.get_cmake_dir(),
+        f"-Dpybind11_DIR={pybind11.get_cmake_dir()}",
     ]
+
 
     import multiprocessing
     cpu_count = multiprocessing.cpu_count()
 
-    make_args = [
-        "cmake",
-        "--build",
-        abs_build_temp_path,
-        "-j " + str(cpu_count)
-    ]
+    make_args = ["cmake", "--build", abs_build_temp_path, f"-j {str(cpu_count)}"]
 
     make_install_args = [
         "cmake",

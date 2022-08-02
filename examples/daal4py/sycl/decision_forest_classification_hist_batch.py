@@ -150,11 +150,13 @@ if __name__ == "__main__":
     print("\nOOB error:\n", train_result.outOfBagError)
     print(
         "\nDecision forest prediction results (first 10 rows):\n",
-        predict_result.prediction[0:10]
+        predict_result.prediction[:10],
     )
+
     print(
         "\nDecision forest probabilities results (first 10 rows):\n",
-        predict_result.probabilities[0:10]
+        predict_result.probabilities[:10],
     )
-    print("\nGround truth (first 10 rows):\n", plabels[0:10])
+
+    print("\nGround truth (first 10 rows):\n", plabels[:10])
     print('All looks good!')

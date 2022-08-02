@@ -111,7 +111,8 @@ if __name__ == "__main__":
     (predict_result, test_dep_data) = main()
     print(
         "\nGradient boosted trees prediction results (first 10 rows):\n",
-        predict_result.prediction[0:10]
+        predict_result.prediction[:10],
     )
-    print("\nGround truth (first 10 rows):\n", test_dep_data[0:10])
+
+    print("\nGround truth (first 10 rows):\n", test_dep_data[:10])
     print('All looks good!')

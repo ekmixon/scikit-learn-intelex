@@ -47,11 +47,11 @@ elif sys.platform in ['win32', 'cygwin']:
     IS_WIN = True
     system_os = "win"
 else:
-    assert False, sys.platform + ' not supported'
+    assert False, f'{sys.platform} not supported'
 
 assert 8 * struct.calcsize('P') in [32, 64]
 
-if 8 * struct.calcsize('P') == 32:
+if struct.calcsize('P') == 4:
     logdir = jp(exdir, '_results', 'ia32')
 else:
     logdir = jp(exdir, '_results', 'intel64')
@@ -63,7 +63,7 @@ try:
     sycl_extention_available = True
 except ModuleNotFoundError:
     sycl_extention_available = False
-print('Sycl extensions available: {}'.format(sycl_extention_available))
+print(f'Sycl extensions available: {sycl_extention_available}')
 
 if sycl_extention_available:
     try:
@@ -72,38 +72,30 @@ if sycl_extention_available:
             availabe_devices.append("gpu")
     except RuntimeError:
         gpu_available = False
-    availabe_devices.append("host")
-    availabe_devices.append("cpu")
+    availabe_devices.extend(("host", "cpu"))
     #validate that host and cpu devices avaialbe for logging reasons. Examples and
     #vaidaton logic assumes that host and cpu devices are always available
-    print('Sycl gpu device: {}'.format(gpu_available))
+    print(f'Sycl gpu device: {gpu_available}')
 
 
 def check_version(rule, target):
-    if not isinstance(rule[0], type(target)):
-        if rule > target:
-            return False
-    else:
+    if isinstance(rule[0], type(target)):
         for rule_item in rule:
             if rule_item > target:
                 return False
             if rule_item[0] == target[0]:
                 break
+    elif rule > target:
+        return False
     return True
 
 
 def check_device(rule, target):
-    for rule_item in rule:
-        if rule_item not in target:
-            return False
-    return True
+    return all(rule_item in target for rule_item in rule)
 
 
 def check_os(rule, target):
-    for rule_item in rule:
-        if rule_item not in target:
-            return False
-    return True
+    return all(rule_item in target for rule_item in rule)
 
 
 def check_library(rule):
@@ -144,12 +136,15 @@ def get_exe_cmd(ex, nodist, nostream):
     if os.path.dirname(ex).endswith("sycl"):
         if not sycl_extention_available:
             return None
-        if not check_version(req_version["sycl/" + os.path.basename(ex)],
-                             get_daal_version()):
+        if not check_version(
+            req_version[f"sycl/{os.path.basename(ex)}"], get_daal_version()
+        ):
             return None
-        if not check_device(req_device["sycl/" + os.path.basename(ex)], availabe_devices):
+        if not check_device(
+            req_device[f"sycl/{os.path.basename(ex)}"], availabe_devices
+        ):
             return None
-        if not check_os(req_os["sycl/" + os.path.basename(ex)], system_os):
+        if not check_os(req_os[f"sycl/{os.path.basename(ex)}"], system_os):
             return None
 
     if os.path.dirname(ex).endswith("daal4py"):
@@ -183,8 +178,9 @@ def run_all(nodist=False, nostream=False):
                 logfn = jp(logdir, script.replace('.py', '.res'))
                 with open(logfn, 'w') as logfile:
                     print('\n##### ' + jp(dirpath, script))
-                    execute_string = get_exe_cmd(jp(dirpath, script), nodist, nostream)
-                    if execute_string:
+                    if execute_string := get_exe_cmd(
+                        jp(dirpath, script), nodist, nostream
+                    ):
                         os.chdir(dirpath)
                         proc = subprocess.Popen(
                             execute_string if IS_WIN else ['/bin/bash',
@@ -210,10 +206,10 @@ def run_all(nodist=False, nostream=False):
                         print(strftime("%H:%M:%S", gmtime()) + '\tSKIPPED\t' + script)
 
     if success != n:
-        print('{}/{} examples passed/skipped, {} failed'.format(success, n, n - success))
-        print('Error(s) occured. Logs can be found in ' + logdir)
+        print(f'{success}/{n} examples passed/skipped, {n - success} failed')
+        print(f'Error(s) occured. Logs can be found in {logdir}')
         return 4711
-    print('{}/{} examples passed/skipped'.format(success, n))
+    print(f'{success}/{n} examples passed/skipped')
     return 0
 
 

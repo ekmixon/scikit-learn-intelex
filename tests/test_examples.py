@@ -31,20 +31,19 @@ from daal4py import _get__daal_link_version__ as dv
 # First item is major version - 2021,
 # second is minor+patch - 0110,
 # third item is status - B
-daal_version = (int(dv()[0:4]), dv()[10:11], int(dv()[4:8]))
+daal_version = int(dv()[:4]), dv()[10:11], int(dv()[4:8])
 print('DAAL version:', daal_version)
 
 
 def check_version(rule, target):
-    if not isinstance(rule[0], type(target)):
-        if rule > target:
-            return False
-    else:
+    if isinstance(rule[0], type(target)):
         for rule_item in rule:
             if rule_item > target:
                 return False
             if rule_item[0] == target[0]:
                 break
+    elif rule > target:
+        return False
     return True
 
 
@@ -64,9 +63,7 @@ def np_read_csv(f, c=None, s=0, n=np.iinfo(np.int64).max, t=np.float64):
     a = np.genfromtxt(f, usecols=c, delimiter=',', skip_header=s, max_rows=n, dtype=t)
     if a.shape[0] == 0:
         raise Exception("done")
-    if a.ndim == 1:
-        return a[:, np.newaxis]
-    return a
+    return a[:, np.newaxis] if a.ndim == 1 else a
 
 
 # function reading file and returning pandas DataFrame
@@ -83,14 +80,8 @@ def csr_read_csv(f, c=None, s=0, n=None, t=np.float64):
 def add_test(cls, e, f=None, attr=None, ver=(0, 0), req_libs=[]):
     import importlib
 
-    @unittest.skipUnless(
-        check_version(ver, daal_version),
-        str(ver) + " not supported in this library version " + str(daal_version)
-    )
-    @unittest.skipUnless(
-        check_libraries(req_libs),
-        "cannot import required libraries " + str(req_libs)
-    )
+    @unittest.skipUnless(check_version(ver, daal_version), f"{str(ver)} not supported in this library version {str(daal_version)}")
+    @unittest.skipUnless(check_libraries(req_libs), f"cannot import required libraries {str(req_libs)}")
     def testit(self):
         ex = importlib.import_module(e)
         result = self.call(ex)
@@ -103,6 +94,7 @@ def add_test(cls, e, f=None, attr=None, ver=(0, 0), req_libs=[]):
             )
         else:
             self.assertTrue(True)
+
     setattr(cls, 'test_' + e, testit)
 
 
@@ -126,7 +118,7 @@ class Base():
         import svd_streaming as ex
         result = self.call(ex)
         data = np.loadtxt("./data/distributed/svd_1.csv", delimiter=',')
-        for f in ["./data/distributed/svd_{}.csv".format(i) for i in range(2, 5)]:
+        for f in [f"./data/distributed/svd_{i}.csv" for i in range(2, 5)]:
             data = np.append(data, np.loadtxt(f, delimiter=','), axis=0)
         self.assertTrue(np.allclose(data,
                                     np.matmul(np.matmul(result.leftSingularMatrix,
@@ -142,7 +134,7 @@ class Base():
         import qr_streaming as ex
         result = self.call(ex)
         data = np.loadtxt("./data/distributed/qr_1.csv", delimiter=',')
-        for f in ["./data/distributed/qr_{}.csv".format(i) for i in range(2, 5)]:
+        for f in [f"./data/distributed/qr_{i}.csv" for i in range(2, 5)]:
             data = np.append(data, np.loadtxt(f, delimiter=','), axis=0)
         self.assertTrue(np.allclose(data, np.matmul(result.matrixQ, result.matrixR)))
 

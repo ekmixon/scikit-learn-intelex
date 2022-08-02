@@ -62,7 +62,8 @@ if __name__ == "__main__":
     (presult, plabels) = main()
     print(
         "\nNaiveBayes classification results (first 20 observations):\n",
-        presult.prediction[0:20]
+        presult.prediction[:20],
     )
-    print("\nGround truth (first 20 observations)\n", plabels[0:20])
+
+    print("\nGround truth (first 20 observations)\n", plabels[:20])
     print('All looks good!')

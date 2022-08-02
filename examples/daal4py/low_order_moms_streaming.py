@@ -32,9 +32,7 @@ except:
         a = np.genfromtxt(f, usecols=c, delimiter=',', skip_header=s, max_rows=n)
         if a.shape[0] == 0:
             raise Exception("done")
-        if a.ndim == 1:
-            return a[:, np.newaxis]
-        return a
+        return a[:, np.newaxis] if a.ndim == 1 else a
 
 
 def main(readcsv=read_csv, method='defaultDense'):
@@ -57,12 +55,9 @@ def main(readcsv=read_csv, method='defaultDense'):
         algo.compute(data)
         lines_read += data.shape[0]
 
-    # All files are done, now finalize the computation
-    result = algo.finalize()
-
     # result provides minimum, maximum, sum, sumSquares, sumSquaresCentered,
     # mean, secondOrderRawMoment, variance, standardDeviation, variation
-    return result
+    return algo.finalize()
 
 
 if __name__ == "__main__":

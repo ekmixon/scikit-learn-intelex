@@ -32,9 +32,7 @@ except:
         a = np.genfromtxt(f, usecols=c, delimiter=',', skip_header=s, max_rows=n)
         if a.shape[0] == 0:
             raise Exception("done")
-        if a.ndim == 1:
-            return a[:, np.newaxis]
-        return a
+        return a[:, np.newaxis] if a.ndim == 1 else a
 
 
 # a generator which reads a file in chunks

@@ -75,7 +75,7 @@ if __name__ == "__main__":
     (assignments, result) = main()
     # result is available on all processes - but we print only on root
     if d4p.my_procid() == 0:
-        print("\nFirst 10 cluster assignments:\n", assignments[0:10])
+        print("\nFirst 10 cluster assignments:\n", assignments[:10])
         print("\nFirst 10 dimensions of centroids:\n", result.centroids[:, 0:10])
         print("\nObjective function value:\n", result.objectiveFunction)
         print('All looks good!')

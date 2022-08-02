@@ -46,8 +46,8 @@ def _column_or_1d(y, warn=False):
         return np.ravel(y)
 
     raise ValueError(
-        "y should be a 1d array, "
-        "got an array of shape {} instead.".format(shape))
+        f"y should be a 1d array, got an array of shape {shape} instead."
+    )
 
 
 def _compute_class_weight(class_weight, classes, y):
@@ -67,7 +67,7 @@ def _compute_class_weight(class_weight, classes, y):
         for c in class_weight:
             i = np.searchsorted(classes, c)
             if i >= len(classes) or classes[i] != c:
-                raise ValueError("Class label {} not present.".format(c))
+                raise ValueError(f"Class label {c} not present.")
             weight[i] = class_weight[c]
 
     return weight
@@ -147,12 +147,12 @@ def _check_is_fitted(estimator, attributes=None, *, msg=None):
                "appropriate arguments before using this estimator.")
 
     if not hasattr(estimator, 'fit'):
-        raise TypeError("%s is not an estimator instance." % (estimator))
+        raise TypeError(f"{estimator} is not an estimator instance.")
 
     if attributes is not None:
         if not isinstance(attributes, (list, tuple)):
             attributes = [attributes]
-        attrs = all([hasattr(estimator, attr) for attr in attributes])
+        attrs = all(hasattr(estimator, attr) for attr in attributes)
     else:
         attrs = [v for v in vars(estimator)
                  if v.endswith("_") and not v.startswith("__")]
@@ -213,21 +213,17 @@ def _type_of_target(y):
     if y.ndim == 2 and y.shape[1] == 0:
         return 'unknown'  # [[]]
 
-    if y.ndim == 2 and y.shape[1] > 1:
-        suffix = "-multioutput"  # [[1, 2], [1, 2]]
-    else:
-        suffix = ""  # [1, 2, 3] or [[1], [2], [3]]
-
+    suffix = "-multioutput" if y.ndim == 2 and y.shape[1] > 1 else ""
     # check float and contains non-integer float values
     if y.dtype.kind == 'f' and np.any(y != y.astype(int)):
         # [.1, .2, 3] or [[.1, .2, 3]] or [[1., .2]] and not [1., 2., 3.]
         # TODO: replace on daal4py
         from sklearn.utils.validation import assert_all_finite
         assert_all_finite(y)
-        return 'continuous' + suffix
+        return f'continuous{suffix}'
 
     if (len(np.unique(y)) > 2) or (y.ndim >= 2 and len(y[0]) > 1):
-        return 'multiclass' + suffix  # [1, 2, 3] or [[1., 2., 3]] or [[1, 2]]
+        return f'multiclass{suffix}'
     return 'binary'  # [1, 2] or [["a"], ["b"]]
 
 

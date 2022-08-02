@@ -72,7 +72,8 @@ if __name__ == "__main__":
     (train_result, predict_result, ptdata) = main()
     print(
         "\nGradient boosted trees prediction results (first 10 rows):\n",
-        predict_result.prediction[0:10]
+        predict_result.prediction[:10],
     )
-    print("\nGround truth (first 10 rows):\n", ptdata[0:10])
+
+    print("\nGround truth (first 10 rows):\n", ptdata[:10])
     print('All looks good!')

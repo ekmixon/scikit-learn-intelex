@@ -66,7 +66,8 @@ if __name__ == "__main__":
     (train_result, predict_result, ptdata) = main()
     print(
         "\nDecision tree prediction results (first 20 rows):\n",
-        predict_result.prediction[0:20]
+        predict_result.prediction[:20],
     )
-    print("\nGround truth (first 10 rows):\n", ptdata[0:20])
+
+    print("\nGround truth (first 10 rows):\n", ptdata[:20])
     print('All looks good!')

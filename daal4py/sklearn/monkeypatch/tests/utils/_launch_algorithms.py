@@ -30,7 +30,7 @@ from sklearn.datasets import (
 import sys
 import pathlib
 absolute_path = str(pathlib.Path(__file__).parent.absolute())
-sys.path.append(absolute_path + '/../')
+sys.path.append(f'{absolute_path}/../')
 from _models_info import MODELS_INFO, TYPES
 
 
@@ -80,7 +80,7 @@ def run_patch(model_info, dtype):
         elif i == 'score':
             model.score(X, y)
         else:
-            raise ValueError(i + ' is wrong method')
+            raise ValueError(f'{i} is wrong method')
         logging.info(i)
 
 
@@ -104,8 +104,8 @@ def run_utils():
             logging.info('pairwise_distances')
     # roc_auc_score
     for t in [np.float32, np.float64]:
-        a = [random.randint(0, 1) for i in range(1000)]
-        b = [random.randint(0, 1) for i in range(1000)]
+        a = [random.randint(0, 1) for _ in range(1000)]
+        b = [random.randint(0, 1) for _ in range(1000)]
         a = np.array(a, dtype=t)
         b = np.array(b, dtype=t)
         print('roc_auc_score', t.__name__)

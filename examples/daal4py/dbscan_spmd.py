@@ -34,17 +34,21 @@ def main(method='defaultDense'):
 
     # configure dbscan main object
     algo = d4p.dbscan(minObservations=minObservations, epsilon=epsilon, distributed=True)
-    # and compute
-    result = algo.compute(data)
-
-    return result
+    return algo.compute(data)
 
 
 if __name__ == "__main__":
     # Initialize SPMD mode
     d4p.daalinit()
     result = main()
-    print("\nResults on node with id = ", d4p.my_procid(), " :\n",
-          "\nFirst 10 cluster assignments:\n", result.assignments[0:10],
-          "\nNumber of clusters:\n", result.nClusters)
+    print(
+        "\nResults on node with id = ",
+        d4p.my_procid(),
+        " :\n",
+        "\nFirst 10 cluster assignments:\n",
+        result.assignments[:10],
+        "\nNumber of clusters:\n",
+        result.nClusters,
+    )
+
     d4p.daalfini()

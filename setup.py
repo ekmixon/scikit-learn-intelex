@@ -55,7 +55,7 @@ elif sys.platform in ['win32', 'cygwin']:
     IS_WIN = True
     lib_dir = jp(dal_root, 'lib', 'intel64')
 else:
-    assert False, sys.platform + ' not supported'
+    assert False, f'{sys.platform} not supported'
 
 ONEDAL_VERSION = get_onedal_version(dal_root)
 ONEDAL_2021_3 = 2021 * 10000 + 3 * 100
@@ -69,7 +69,7 @@ def get_win_major_version():
         return ''
     version = lib_name.split('\\')[-1].split('.')[1]
     try:
-        version = '.' + str(int(version))
+        version = f'.{int(version)}'
     except ValueError:
         version = ''
     return version
@@ -79,13 +79,13 @@ d4p_version = (os.environ['DAAL4PY_VERSION'] if 'DAAL4PY_VERSION' in os.environ
                else time.strftime('2021.%Y%m%d.%H%M%S'))
 
 trues = ['true', 'True', 'TRUE', '1', 't', 'T', 'y', 'Y', 'Yes', 'yes', 'YES']
-no_dist = True if 'NO_DIST' in os.environ and os.environ['NO_DIST'] in trues else False
+no_dist = 'NO_DIST' in os.environ and os.environ['NO_DIST'] in trues
 no_stream = 'NO_STREAM' in os.environ and os.environ['NO_STREAM'] in trues
 mpi_root = None if no_dist else os.environ['MPIROOT']
-dpcpp = True if 'DPCPPROOT' in os.environ else False
-dpcpp_root = None if not dpcpp else os.environ['DPCPPROOT']
-dpctl = True if dpcpp and 'DPCTLROOT' in os.environ else False
-dpctl_root = None if not dpctl else os.environ['DPCTLROOT']
+dpcpp = 'DPCPPROOT' in os.environ
+dpcpp_root = os.environ['DPCPPROOT'] if dpcpp else None
+dpctl = dpcpp and 'DPCTLROOT' in os.environ
+dpctl_root = os.environ['DPCTLROOT'] if dpctl else None
 
 
 daal_lib_dir = lib_dir if (IS_MAC or os.path.isdir(
@@ -109,8 +109,7 @@ else:
     DIST_CPPS = ['src/transceiver.cpp']
     MPI_INCDIRS = [jp(mpi_root, 'include')]
     MPI_LIBDIRS = [jp(mpi_root, 'lib')]
-    MPI_LIBNAME = getattr(os.environ, 'MPI_LIBNAME', None)
-    if MPI_LIBNAME:
+    if MPI_LIBNAME := getattr(os.environ, 'MPI_LIBNAME', None):
         MPI_LIBS = [MPI_LIBNAME]
     elif IS_WIN:
         if os.path.isfile(jp(mpi_root, 'lib', 'mpi.lib')):
@@ -171,12 +170,15 @@ def get_libs(iface='daal'):
 
 
 def get_build_options():
-    include_dir_plat = [os.path.abspath('./src'),
-                        os.path.abspath('.'),
-                        dal_root + '/include', ]
+    include_dir_plat = [
+        os.path.abspath('./src'),
+        os.path.abspath('.'),
+        f'{dal_root}/include',
+    ]
+
     # FIXME it is a wrong place for this dependency
     if not no_dist:
-        include_dir_plat.append(mpi_root + '/include')
+        include_dir_plat.append(f'{mpi_root}/include')
     using_intel = os.environ.get('cc', '') in ['icc', 'icpc', 'icl', 'dpcpp']
     eca = ['-DPY_ARRAY_UNIQUE_SYMBOL=daal4py_array_API',
            '-DD4P_VERSION="' + d4p_version + '"', '-DNPY_ALLOW_THREADS=1']
@@ -198,7 +200,7 @@ def get_build_options():
     if IS_MAC:
         eca.append('-stdlib=libc++')
         ela.append('-stdlib=libc++')
-        ela.append("-Wl,-rpath,{}".format(daal_lib_dir))
+        ela.append(f"-Wl,-rpath,{daal_lib_dir}")
         ela.append("-Wl,-rpath,@loader_path/../../../")
     elif IS_WIN:
         ela.append('-IGNORE:4197')
@@ -256,7 +258,7 @@ def getpyexts():
     if not no_dist:
         mpi_include_dir = include_dir_plat + [np.get_include()] + MPI_INCDIRS
         mpi_depens = glob.glob(jp(os.path.abspath('src'), '*.h'))
-        mpi_extra_link = ela + ["-Wl,-rpath,{}".format(x) for x in MPI_LIBDIRS]
+        mpi_extra_link = ela + [f"-Wl,-rpath,{x}" for x in MPI_LIBDIRS]
         exts.append(Extension('daal4py.mpi_transceiver',
                               MPI_CPPS,
                               depends=mpi_depens,

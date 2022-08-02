@@ -55,7 +55,7 @@ def _test_dbscan_big_data_numpy_gen(eps: float, min_samples: int, metric: str,
     data, weights = generate_data(
         low=low, high=high, samples_number=samples_number,
         sample_dimension=sample_dimension)
-    if use_weights is False:
+    if not use_weights:
         weights = None
     initialized_daal_dbscan = DBSCAN_DAAL(
         eps=eps, min_samples=min_samples, metric=metric).fit(

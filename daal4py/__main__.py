@@ -45,8 +45,8 @@ def _main():
         print("Scikit-learn could not be imported. Nothing to patch")
 
     sys.argv = [args.name] + args.args
-    if '_' + args.name in globals():
-        return globals()['_' + args.name](*args.args)
+    if f'_{args.name}' in globals():
+        return globals()[f'_{args.name}'](*args.args)
     import runpy
     runf = runpy.run_module if args.module else runpy.run_path
     runf(args.name, run_name='__main__')

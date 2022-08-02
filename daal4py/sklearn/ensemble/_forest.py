@@ -66,9 +66,7 @@ def _to_absolute_max_features(
             'values are "auto", "sqrt" or "log2".')
     if isinstance(max_features, (numbers.Integral, np.integer)):
         return max_features
-    if max_features > 0.0:
-        return max(1, int(max_features * n_features))
-    return 0
+    return max(1, int(max_features * n_features)) if max_features > 0.0 else 0
 
 
 def _get_n_samples_bootstrap(n_samples, max_samples):
@@ -86,10 +84,9 @@ def _get_n_samples_bootstrap(n_samples, max_samples):
             if not (0 < float(max_samples) <= 1):
                 msg = "`max_samples` must be in range (0.0, 1.0] but got value {}"
                 raise ValueError(msg.format(max_samples))
-        else:
-            if not (0 < float(max_samples) < 1):
-                msg = "`max_samples` must be in range (0, 1) but got value {}"
-                raise ValueError(msg.format(max_samples))
+        elif not (0 < float(max_samples) < 1):
+            msg = "`max_samples` must be in range (0, 1) but got value {}"
+            raise ValueError(msg.format(max_samples))
         return float(max_samples)
 
     msg = "`max_samples` should be int or float, but got type '{}'"
@@ -98,27 +95,25 @@ def _get_n_samples_bootstrap(n_samples, max_samples):
 
 def _check_parameters(self):
     if isinstance(self.min_samples_leaf, numbers.Integral):
-        if not 1 <= self.min_samples_leaf:
+        if self.min_samples_leaf < 1:
             raise ValueError("min_samples_leaf must be at least 1 "
                              "or in (0, 0.5], got %s"
                              % self.min_samples_leaf)
-    else:  # float
-        if not 0. < self.min_samples_leaf <= 0.5:
-            raise ValueError("min_samples_leaf must be at least 1 "
-                             "or in (0, 0.5], got %s"
-                             % self.min_samples_leaf)
+    elif not 0. < self.min_samples_leaf <= 0.5:
+        raise ValueError("min_samples_leaf must be at least 1 "
+                         "or in (0, 0.5], got %s"
+                         % self.min_samples_leaf)
     if isinstance(self.min_samples_split, numbers.Integral):
-        if not 2 <= self.min_samples_split:
+        if self.min_samples_split < 2:
             raise ValueError("min_samples_split must be an integer "
                              "greater than 1 or a float in (0.0, 1.0]; "
                              "got the integer %s"
                              % self.min_samples_split)
-    else:  # float
-        if not 0. < self.min_samples_split <= 1.:
-            raise ValueError("min_samples_split must be an integer "
-                             "greater than 1 or a float in (0.0, 1.0]; "
-                             "got the float %s"
-                             % self.min_samples_split)
+    elif not 0. < self.min_samples_split <= 1.:
+        raise ValueError("min_samples_split must be an integer "
+                         "greater than 1 or a float in (0.0, 1.0]; "
+                         "got the float %s"
+                         % self.min_samples_split)
     if not 0 <= self.min_weight_fraction_leaf <= 0.5:
         raise ValueError("min_weight_fraction_leaf must in [0, 0.5]")
     if self.min_impurity_split is not None:
@@ -141,20 +136,16 @@ def _check_parameters(self):
         if self.max_leaf_nodes < 2:
             raise ValueError(("max_leaf_nodes {0} must be either None "
                               "or larger than 1").format(self.max_leaf_nodes))
-    if isinstance(self.maxBins, numbers.Integral):
-        if not 2 <= self.maxBins:
-            raise ValueError("maxBins must be at least 2, got %s"
-                             % self.maxBins)
-    else:
+    if not isinstance(self.maxBins, numbers.Integral):
         raise ValueError("maxBins must be integral number but was "
                          "%r" % self.maxBins)
-    if isinstance(self.minBinSize, numbers.Integral):
-        if not 1 <= self.minBinSize:
-            raise ValueError("minBinSize must be at least 1, got %s"
-                             % self.minBinSize)
-    else:
+    if self.maxBins < 2:
+        raise ValueError(f"maxBins must be at least 2, got {self.maxBins}")
+    if not isinstance(self.minBinSize, numbers.Integral):
         raise ValueError("minBinSize must be integral number but was "
                          "%r" % self.minBinSize)
+    if self.minBinSize < 1:
+        raise ValueError(f"minBinSize must be at least 1, got {self.minBinSize}")
 
 
 def _daal_fit_classifier(self, X, y, sample_weight=None):
@@ -285,9 +276,7 @@ def _daal_predict_proba(self, X):
     )
     dfc_predictionResult = dfc_algorithm.compute(X, self.daal_model_)
 
-    pred = dfc_predictionResult.probabilities
-
-    return pred
+    return dfc_predictionResult.probabilities
 
 
 def _fit_classifier(self, X, y, sample_weight=None):
@@ -538,8 +527,10 @@ def check_sample_weight(sample_weight, X, dtype=None):
             raise ValueError("Sample weights must be 1D array or scalar")
 
         if sample_weight.shape != (n_samples,):
-            raise ValueError("sample_weight.shape == {}, expected {}!"
-                             .format(sample_weight.shape, (n_samples,)))
+            raise ValueError(
+                f"sample_weight.shape == {sample_weight.shape}, expected {(n_samples, )}!"
+            )
+
     return sample_weight
 
 
@@ -781,9 +772,8 @@ class RandomForestClassifier(RandomForestClassifier_original):
 
     @property
     def _estimators_(self):
-        if hasattr(self, '_cached_estimators_'):
-            if self._cached_estimators_:
-                return self._cached_estimators_
+        if hasattr(self, '_cached_estimators_') and self._cached_estimators_:
+            return self._cached_estimators_
 
         if sklearn_check_version('0.22'):
             check_is_fitted(self)
@@ -1028,9 +1018,8 @@ class RandomForestRegressor(RandomForestRegressor_original):
 
     @property
     def _estimators_(self):
-        if hasattr(self, '_cached_estimators_'):
-            if self._cached_estimators_:
-                return self._cached_estimators_
+        if hasattr(self, '_cached_estimators_') and self._cached_estimators_:
+            return self._cached_estimators_
         if sklearn_check_version('0.22'):
             check_is_fitted(self)
         else:

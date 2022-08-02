@@ -79,15 +79,18 @@ if __name__ == "__main__":
     print("\nLogistic Regression coefficients:\n", train_result.model.Beta)
     print(
         "\nLogistic regression prediction results (first 10 rows):\n",
-        predict_result.prediction[0:10]
+        predict_result.prediction[:10],
     )
-    print("\nGround truth (first 10 rows):\n", predict_labels[0:10])
+
+    print("\nGround truth (first 10 rows):\n", predict_labels[:10])
     print(
         "\nLogistic regression prediction probabilities (first 10 rows):\n",
-        predict_result.probabilities[0:10]
+        predict_result.probabilities[:10],
     )
+
     print(
         "\nLogistic regression prediction log probabilities (first 10 rows):\n",
-        predict_result.logProbabilities[0:10]
+        predict_result.logProbabilities[:10],
     )
+
     print('All looks good!')

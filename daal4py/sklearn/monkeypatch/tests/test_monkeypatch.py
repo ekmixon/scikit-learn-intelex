@@ -20,10 +20,7 @@ import daal4py.sklearn
 def test_monkey_patching():
     _tokens = daal4py.sklearn.sklearn_patch_names()
     _values = daal4py.sklearn.sklearn_patch_map().values()
-    _classes = list()
-    for v in _values:
-        _classes.append(v[0][0])
-
+    _classes = [v[0][0] for v in _values]
     assert len(_tokens) == len(_classes)
     assert isinstance(_tokens, list) and len(_tokens) > 0, \
         "Internal Error: list of patched names has unexcepable format."

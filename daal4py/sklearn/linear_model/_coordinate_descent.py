@@ -56,10 +56,9 @@ def _daal4py_check(self, X, y, check_input):
         if check_input:
             check_array(self.precompute, dtype=_fptype)
         self.precompute = make2d(self.precompute)
-    else:
-        if self.precompute not in [False, True, 'auto']:
-            raise ValueError("precompute should be one of True, False, "
-                             "'auto' or array-like. Got %r" % self.precompute)
+    elif self.precompute not in [False, True, 'auto']:
+        raise ValueError("precompute should be one of True, False, "
+                         "'auto' or array-like. Got %r" % self.precompute)
 
     # check selection
     if self.selection not in ['random', 'cyclic']:

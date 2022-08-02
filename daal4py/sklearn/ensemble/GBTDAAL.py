@@ -178,10 +178,10 @@ class GBTDAALClassifier(GBTDAALBase, ClassifierMixin):
             return np.full(X.shape[0], self.classes_[0])
 
         if not hasattr(self, 'daal_model_'):
-            raise ValueError((
-                "The class {} instance does not have 'daal_model_' attribute set. "
-                "Call 'fit' with appropriate arguments before using this method.").format(
-                    type(self).__name__))
+            raise ValueError(
+                f"The class {type(self).__name__} instance does not have 'daal_model_' attribute set. Call 'fit' with appropriate arguments before using this method."
+            )
+
 
         # Define type of data
         fptype = getFPType(X)
@@ -273,10 +273,10 @@ class GBTDAALRegressor(GBTDAALBase, RegressorMixin):
             raise ValueError('Shape of input is different from what was seen in `fit`')
 
         if not hasattr(self, 'daal_model_'):
-            raise ValueError((
-                "The class {} instance does not have 'daal_model_' attribute set. "
-                "Call 'fit' with appropriate arguments before using this method.").format(
-                    type(self).__name__))
+            raise ValueError(
+                f"The class {type(self).__name__} instance does not have 'daal_model_' attribute set. Call 'fit' with appropriate arguments before using this method."
+            )
+
 
         # Define type of data
         fptype = getFPType(X)

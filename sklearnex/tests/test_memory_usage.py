@@ -49,11 +49,13 @@ BANNED_ESTIMATORS = [
 patched_estimators = get_patch_map().values()
 for listing in patched_estimators:
     estimator, name = listing[0][0][2], listing[0][0][1]
-    if not isinstance(estimator, types.FunctionType):
-        if name not in BANNED_ESTIMATORS:
-            if isinstance(estimator(), BaseEstimator):
-                if hasattr(estimator, 'fit'):
-                    ESTIMATORS.append(estimator)
+    if (
+        not isinstance(estimator, types.FunctionType)
+        and name not in BANNED_ESTIMATORS
+        and isinstance(estimator(), BaseEstimator)
+        and hasattr(estimator, 'fit')
+    ):
+        ESTIMATORS.append(estimator)
 
 
 def ndarray_c(x, y):

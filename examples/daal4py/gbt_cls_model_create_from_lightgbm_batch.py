@@ -85,9 +85,9 @@ def main(readcsv=pd_read_csv, method='defaultDense'):
 if __name__ == "__main__":
     (lgb_prediction, lgb_errors_count, daal_prediction,
      daal_errors_count, y_test) = main()
-    print("\nLightGBM prediction results (first 10 rows):\n", lgb_prediction[0:10])
-    print("\ndaal4py prediction results (first 10 rows):\n", daal_prediction[0:10])
-    print("\nGround truth (first 10 rows):\n", y_test[0:10])
+    print("\nLightGBM prediction results (first 10 rows):\n", lgb_prediction[:10])
+    print("\ndaal4py prediction results (first 10 rows):\n", daal_prediction[:10])
+    print("\nGround truth (first 10 rows):\n", y_test[:10])
 
     print("LightGBM errors count:", lgb_errors_count)
     print("LightGBM accuracy score:", 1 - lgb_errors_count / lgb_prediction.shape[0])

@@ -173,14 +173,14 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError('Parameter "split_criterion" must be '
                              '"gini" or "infoGain".')
 
-        if not isinstance(self.max_depth, numbers.Integral) or \
-                self.max_depth < 0:
-            if self.max_depth is not None:
-                raise ValueError('Parameter "max_depth" must be '
-                                 'a non-negative integer value or None.')
+        if (
+            not isinstance(self.max_depth, numbers.Integral) or self.max_depth < 0
+        ) and self.max_depth is not None:
+            raise ValueError('Parameter "max_depth" must be '
+                             'a non-negative integer value or None.')
 
         if not isinstance(self.min_observations_in_leaf_node, numbers.Integral) or \
-                self.min_observations_in_leaf_node <= 0:
+                    self.min_observations_in_leaf_node <= 0:
             raise ValueError('Parameter "min_observations_in_leaf_node" must be '
                              'non-zero positive integer value.')
 
@@ -221,7 +221,7 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         y_store_unique_indices = np.zeros(y.shape, dtype=np.int)
         for k in range(self.n_outputs_):
             classes_k, y_store_unique_indices[:, k] = \
-                np.unique(y[:, k], return_inverse=True)
+                    np.unique(y[:, k], return_inverse=True)
             self.classes_.append(classes_k)
             self.n_classes_.append(classes_k.shape[0])
         y = y_store_unique_indices
@@ -243,7 +243,7 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         if check_input:
             X = check_array(X, dtype=[np.single, np.double], accept_sparse="csr")
             if issparse(X) and \
-                    (X.indices.dtype != np.intc or X.indptr.dtype != np.intc):
+                        (X.indices.dtype != np.intc or X.indptr.dtype != np.intc):
                 raise ValueError("No support for np.int64 index based "
                                  "sparse matrices")
 

@@ -70,8 +70,11 @@ def check_data_formats_diff(name):
 
     for i in range(1, len(alg_results)):
         for j, res in enumerate(alg_results[i]):
-            assert (res == alg_results[0][j]).mean() == 1, \
-                ('Results are different between formats: estimator=%s' % (name))
+            assert (
+                res == alg_results[0][j]
+            ).mean() == 1, (
+                f'Results are different between formats: estimator={name}'
+            )
 
 
 @pytest.mark.parametrize('name', ESTIMATORS)

@@ -32,9 +32,7 @@ except:
         a = np.genfromtxt(f, usecols=c, delimiter=',', skip_header=s, max_rows=n)
         if a.shape[0] == 0:
             raise Exception("done")
-        if a.ndim == 1:
-            return a[:, np.newaxis]
-        return a
+        return a[:, np.newaxis] if a.ndim == 1 else a
 
 
 def main(readcsv=read_csv, method='defaultDense'):
@@ -81,7 +79,8 @@ if __name__ == "__main__":
     print("\nLinear Regression coefficients:\n", train_result.model.Beta)
     print(
         "\nLinear Regression prediction results: (first 10 rows):\n",
-        predict_result.prediction[0:10]
+        predict_result.prediction[:10],
     )
-    print("\nGround truth (first 10 rows):\n", ptdata[0:10])
+
+    print("\nGround truth (first 10 rows):\n", ptdata[:10])
     print('All looks good!')

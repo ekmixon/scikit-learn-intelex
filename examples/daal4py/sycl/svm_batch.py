@@ -150,11 +150,13 @@ if __name__ == "__main__":
     np.set_printoptions(precision=0)
     print(
         "\nSVM classification decision function (first 10 observations):\n",
-        decision_function[0:10]
+        decision_function[:10],
     )
+
     print(
         "\nSVM classification predict result (first 10 observations):\n",
-        predict_result[0:10]
+        predict_result[:10],
     )
-    print("\nGround truth (first 10 observations):\n", predict_labels[0:10])
+
+    print("\nGround truth (first 10 observations):\n", predict_labels[:10])
     print('All looks good!')

@@ -33,34 +33,33 @@ def set_idp_sklearn_verbose():
                 stream=sys.stdout,
                 format='%(levelname)s: %(message)s', level=logLevel.upper())
     except Exception:
-        warnings.warn('Unknown level "{}" for logging.\n'
-                      'Please, use one of "CRITICAL", "ERROR", '
-                      '"WARNING", "INFO", "DEBUG".'.format(logLevel))
+        warnings.warn(
+            f'Unknown level "{logLevel}" for logging.\nPlease, use one of "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG".'
+        )
 
 
 def daal_check_version(rule):
     # First item is major version - 2021,
     # second is minor+patch - 0110,
     # third item is status - B
-    target = (int(dv()[0:4]), dv()[10:11], int(dv()[4:8]))
-    if not isinstance(rule[0], type(target)):
-        if rule > target:
-            return False
-    else:
+    target = int(dv()[:4]), dv()[10:11], int(dv()[4:8])
+    if isinstance(rule[0], type(target)):
         for rule_item in rule:
             if rule_item > target:
                 return False
             if rule_item[0] == target[0]:
                 break
+    elif rule > target:
+        return False
     return True
 
 
 def sklearn_check_version(ver):
-    return bool(LooseVersion(sklearn_version) >= LooseVersion(ver))
+    return LooseVersion(sklearn_version) >= LooseVersion(ver)
 
 
 def get_daal_version():
-    return (int(dv()[0:4]), dv()[10:11], int(dv()[4:8]))
+    return int(dv()[:4]), dv()[10:11], int(dv()[4:8])
 
 
 def parse_dtype(dt):

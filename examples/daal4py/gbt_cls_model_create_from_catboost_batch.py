@@ -81,11 +81,9 @@ def main(readcsv=pd_read_csv, method='defaultDense'):
 if __name__ == "__main__":
     (cb_prediction, cb_errors_count,
      daal_prediction, daal_errors_count, y_test) = main()
-    print("\nCatboost prediction results (first 10 rows):\n",
-          cb_prediction[0:10])
-    print("\ndaal4py prediction results (first 10 rows):\n",
-          daal_prediction[0:10])
-    print("\nGround truth (first 10 rows):\n", y_test[0:10])
+    print("\nCatboost prediction results (first 10 rows):\n", cb_prediction[:10])
+    print("\ndaal4py prediction results (first 10 rows):\n", daal_prediction[:10])
+    print("\nGround truth (first 10 rows):\n", y_test[:10])
 
     print("Catboost errors count:", cb_errors_count)
     print("Catboost accuracy score:",

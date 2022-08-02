@@ -65,8 +65,8 @@ def _test_determenistic(distance, algorithm, weight, k):
         scikit_accuracy = accuracy_score(y_test, scikit_predict)
         daal_accuracy = accuracy_score(y_test, daal_predict)
         ratio = daal_accuracy / scikit_accuracy
-        reason = ("kNN accuracy: scikit_accuracy={},daal_accuracy={}, ratio={}".format(
-            scikit_accuracy, daal_accuracy, ratio))
+        reason = f"kNN accuracy: scikit_accuracy={scikit_accuracy},daal_accuracy={daal_accuracy}, ratio={ratio}"
+
         assert ratio >= ACCURACY_RATIO, reason
 
         # predict proba
@@ -76,8 +76,8 @@ def _test_determenistic(distance, algorithm, weight, k):
         scikit_log_loss = log_loss(y_test, scikit_predict_proba)
         daal_log_loss = log_loss(y_test, daal_predict_proba)
         ratio = daal_log_loss / scikit_log_loss
-        reason = "kNN log_loss: scikit_log_loss={},daal_log_loss={}, ratio={}".format(
-            scikit_log_loss, daal_log_loss, ratio)
+        reason = f"kNN log_loss: scikit_log_loss={scikit_log_loss},daal_log_loss={daal_log_loss}, ratio={ratio}"
+
         assert ratio <= LOG_LOSS_RATIO, reason
 
         # ROC AUC
@@ -86,14 +86,14 @@ def _test_determenistic(distance, algorithm, weight, k):
         daal_roc_auc = roc_auc_score(
             y_test, daal_predict_proba, multi_class='ovr')
         ratio = daal_roc_auc / scikit_roc_auc
-        reason = "kNN roc_auc: scikit_roc_auc={}, daal_roc_auc={}, ratio={}".format(
-            scikit_roc_auc, daal_roc_auc, ratio)
+        reason = f"kNN roc_auc: scikit_roc_auc={scikit_roc_auc}, daal_roc_auc={daal_roc_auc}, ratio={ratio}"
+
         assert ratio >= ROC_AUC_RATIO, reason
 
     for i in range(1, N_TRIES):
         for j, res in enumerate(alg_results[i]):
-            reason = 'Results are different between runs for {}, {}, {}, k={}'.format(
-                algorithm, weight, distance, k)
+            reason = f'Results are different between runs for {algorithm}, {weight}, {distance}, k={k}'
+
             assert (res == alg_results[0][j]).mean() == 1, reason
 
 

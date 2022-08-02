@@ -204,14 +204,13 @@ def _daal_check_array(array, accept_sparse=False, *, accept_large_sparse=True,
         raise ValueError('force_all_finite should be a bool or "allow-nan"'
                          '. Got {!r} instead'.format(force_all_finite))
 
-    if estimator is not None:
-        if isinstance(estimator, str):
-            estimator_name = estimator
-        else:
-            estimator_name = estimator.__class__.__name__
-    else:
+    if estimator is None:
         estimator_name = "Estimator"
-    context = " by %s" % estimator_name if estimator is not None else ""
+    elif isinstance(estimator, str):
+        estimator_name = estimator
+    else:
+        estimator_name = estimator.__class__.__name__
+    context = f" by {estimator_name}" if estimator is not None else ""
 
     array_orig = array
 
@@ -278,14 +277,7 @@ def _daal_check_array(array, accept_sparse=False, *, accept_large_sparse=True,
             dtype = None
 
     if isinstance(dtype, (list, tuple)):
-        if dtype_orig is not None and dtype_orig in dtype:
-            # no dtype conversion required
-            dtype = None
-        else:
-            # dtype conversion required. Let's select the first element of the
-            # list of accepted types.
-            dtype = dtype[0]
-
+        dtype = None if dtype_orig is not None and dtype_orig in dtype else dtype[0]
     if has_pd_integer_array:
         # If there are any pandas integer extension arrays,
         array = array.astype(dtype)
@@ -322,8 +314,7 @@ def _daal_check_array(array, accept_sparse=False, *, accept_large_sparse=True,
                 else:
                     array = np.asarray(array, order=order, dtype=dtype)
             except ComplexWarning:
-                raise ValueError("Complex data not supported\n"
-                                 "{}\n".format(array))
+                raise ValueError(f"Complex data not supported\n{array}\n")
 
         # It is possible that the np.array(..) gave no warning. This happens
         # when no dtype conversion happened, for example dtype = None. The
@@ -335,17 +326,15 @@ def _daal_check_array(array, accept_sparse=False, *, accept_large_sparse=True,
             # If input is scalar raise error
             if array.ndim == 0:
                 raise ValueError(
-                    "Expected 2D array, got scalar array instead:\narray={}.\n"
-                    "Reshape your data either using array.reshape(-1, 1) if "
-                    "your data has a single feature or array.reshape(1, -1) "
-                    "if it contains a single sample.".format(array))
+                    f"Expected 2D array, got scalar array instead:\narray={array}.\nReshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample."
+                )
+
             # If input is 1D raise error
             if array.ndim == 1:
                 raise ValueError(
-                    "Expected 2D array, got 1D array instead:\narray={}.\n"
-                    "Reshape your data either using array.reshape(-1, 1) if "
-                    "your data has a single feature or array.reshape(1, -1) "
-                    "if it contains a single sample.".format(array))
+                    f"Expected 2D array, got 1D array instead:\narray={array}.\nReshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample."
+                )
+
 
         # in the future np.flexible dtypes will be handled like object dtypes
         if dtype_numeric and np.issubdtype(array.dtype, np.flexible):

@@ -56,7 +56,7 @@ def _get_device_info_from_daal4py():
     if 'daal4py.oneapi' in sys.modules:
         from daal4py.oneapi import _get_device_name_sycl_ctxt, _get_sycl_ctxt_params
         return _get_device_name_sycl_ctxt(), _get_sycl_ctxt_params()
-    return None, dict()
+    return None, {}
 
 
 def _get_global_queue():
@@ -65,7 +65,7 @@ def _get_global_queue():
     if d4p_target == 'host':
         d4p_target = 'cpu'
 
-    QueueClass = DummySyclQueue if not dpctl_available else SyclQueue
+    QueueClass = SyclQueue if dpctl_available else DummySyclQueue
 
     if target != 'auto':
         if d4p_target is not None and \
@@ -73,12 +73,8 @@ def _get_global_queue():
            d4p_target not in target.sycl_device.get_filter_string():
             raise RuntimeError("Cannot use target offload option "
                                "inside daal4py.oneapi.sycl_context")
-        if isinstance(target, QueueClass):
-            return target
-        return QueueClass(target)
-    if d4p_target is not None:
-        return QueueClass(d4p_target)
-    return None
+        return target if isinstance(target, QueueClass) else QueueClass(target)
+    return QueueClass(d4p_target) if d4p_target is not None else None
 
 
 def _transfer_to_host(queue, *data):
@@ -91,13 +87,12 @@ def _transfer_to_host(queue, *data):
             if not dpctl_available:
                 raise RuntimeError("dpctl need to be installed to work "
                                    "with __sycl_usm_array_interface__")
-            if queue is not None:
-                if queue.sycl_device != usm_iface['syclobj'].sycl_device:
-                    raise RuntimeError('Input data shall be located '
-                                       'on single target device')
-            else:
+            if queue is None:
                 queue = usm_iface['syclobj']
 
+            elif queue.sycl_device != usm_iface['syclobj'].sycl_device:
+                raise RuntimeError('Input data shall be located '
+                                   'on single target device')
             buffer = as_usm_memory(item).copy_to_host()
             item = np.ndarray(shape=usm_iface['shape'],
                               dtype=usm_iface['typestr'],
@@ -171,12 +166,15 @@ def wrap_output_data(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         data = (*args, *kwargs.values())
-        if len(data) == 0:
-            usm_iface = None
-        else:
-            usm_iface = getattr(data[0], '__sycl_usm_array_interface__', None)
+        usm_iface = (
+            getattr(data[0], '__sycl_usm_array_interface__', None)
+            if data
+            else None
+        )
+
         result = func(self, *args, **kwargs)
         if usm_iface is not None:
             return _copy_to_usm(usm_iface['syclobj'], result)
         return result
+
     return wrapper

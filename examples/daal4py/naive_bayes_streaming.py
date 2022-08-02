@@ -32,9 +32,7 @@ except:
         a = np.genfromtxt(f, usecols=c, delimiter=',', skip_header=s, max_rows=n)
         if a.shape[0] == 0:
             raise Exception("done")
-        if a.ndim == 1:
-            return a[:, np.newaxis]
-        return a
+        return a[:, np.newaxis] if a.ndim == 1 else a
 
 
 def main(readcsv=read_csv, method='defaultDense'):
@@ -81,7 +79,8 @@ if __name__ == "__main__":
     (result, labels) = main()
     print(
         "\nNaiveBayes classification results (first 20 observations):\n",
-        result.prediction[0:20]
+        result.prediction[:20],
     )
-    print("\nGround truth (first 20 observations)\n", labels[0:20])
+
+    print("\nGround truth (first 20 observations)\n", labels[:20])
     print('All looks good!')

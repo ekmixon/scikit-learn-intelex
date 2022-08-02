@@ -70,8 +70,7 @@ def compute(train_data, train_labels, predict_data, nClasses):
 
     # Create an algorithm object and call compute
     predict_algo = d4p.bf_knn_classification_prediction(nClasses=nClasses, fptype='float')
-    predict_result = predict_algo.compute(predict_data, train_result.model)
-    return predict_result
+    return predict_algo.compute(predict_data, train_result.model)
 
 
 def main(readcsv=read_csv, method='defaultDense'):

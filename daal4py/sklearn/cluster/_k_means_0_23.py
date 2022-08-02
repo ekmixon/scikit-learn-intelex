@@ -138,7 +138,7 @@ def _daal4py_compute_starting_centroids(
 def _daal4py_kmeans_compatibility(nClusters, maxIterations, fptype="double",
                                   method="lloydDense", accuracyThreshold=0.0,
                                   resultsToEvaluate="computeCentroids"):
-    kmeans_algo = daal4py.kmeans(
+    return daal4py.kmeans(
         nClusters=nClusters,
         maxIterations=maxIterations,
         fptype=fptype,
@@ -146,7 +146,6 @@ def _daal4py_kmeans_compatibility(nClusters, maxIterations, fptype="double",
         accuracyThreshold=accuracyThreshold,
         method=method,
     )
-    return kmeans_algo
 
 
 def _daal4py_k_means_predict(X, nClusters, centroids,
@@ -217,11 +216,12 @@ def _daal4py_k_means_fit(X, nClusters, numIterations,
     distinct_clusters = np.unique(best_labels).size
     if distinct_clusters < nClusters:
         warnings.warn(
-            "Number of distinct clusters ({}) found smaller than "
-            "n_clusters ({}). Possibly due to duplicate points "
-            "in X.".format(distinct_clusters, nClusters),
-            ConvergenceWarning, stacklevel=2)
-        # for passing test case "test_kmeans_warns_less_centers_than_unique_points"
+            f"Number of distinct clusters ({distinct_clusters}) found smaller than n_clusters ({nClusters}). Possibly due to duplicate points in X.",
+            ConvergenceWarning,
+            stacklevel=2,
+        )
+
+            # for passing test case "test_kmeans_warns_less_centers_than_unique_points"
 
     return best_cluster_centers, best_labels, best_inertia, best_n_iter
 
@@ -244,27 +244,28 @@ def _fit(self, X, y=None, sample_weight=None):
         are assigned equal weight (default: None)
 
     """
-    if hasattr(self, 'precompute_distances'):
-        if self.precompute_distances != 'deprecated':
-            if sklearn_check_version('0.24'):
-                warnings.warn("'precompute_distances' was deprecated in version "
-                              "0.23 and will be removed in 1.0 (renaming of 0.25)."
-                              " It has no effect", FutureWarning)
-            elif sklearn_check_version('0.23'):
-                warnings.warn("'precompute_distances' was deprecated in version "
-                              "0.23 and will be removed in 0.25. It has no "
-                              "effect", FutureWarning)
+    if (
+        hasattr(self, 'precompute_distances')
+        and self.precompute_distances != 'deprecated'
+    ):
+        if sklearn_check_version('0.24'):
+            warnings.warn("'precompute_distances' was deprecated in version "
+                          "0.23 and will be removed in 1.0 (renaming of 0.25)."
+                          " It has no effect", FutureWarning)
+        elif sklearn_check_version('0.23'):
+            warnings.warn("'precompute_distances' was deprecated in version "
+                          "0.23 and will be removed in 0.25. It has no "
+                          "effect", FutureWarning)
 
     self._n_threads = None
-    if hasattr(self, 'n_jobs'):
-        if self.n_jobs != 'deprecated':
-            if sklearn_check_version('0.24'):
-                warnings.warn("'n_jobs' was deprecated in version 0.23 and will be"
-                              " removed in 1.0 (renaming of 0.25).", FutureWarning)
-            elif sklearn_check_version('0.23'):
-                warnings.warn("'n_jobs' was deprecated in version 0.23 and will be"
-                              " removed in 0.25.", FutureWarning)
-            self._n_threads = self.n_jobs
+    if hasattr(self, 'n_jobs') and self.n_jobs != 'deprecated':
+        if sklearn_check_version('0.24'):
+            warnings.warn("'n_jobs' was deprecated in version 0.23 and will be"
+                          " removed in 1.0 (renaming of 0.25).", FutureWarning)
+        elif sklearn_check_version('0.23'):
+            warnings.warn("'n_jobs' was deprecated in version 0.23 and will be"
+                          " removed in 0.25.", FutureWarning)
+        self._n_threads = self.n_jobs
     self._n_threads = _openmp_effective_n_threads(self._n_threads)
 
     if self.n_init <= 0:
@@ -289,8 +290,10 @@ def _fit(self, X, y=None, sample_weight=None):
         algorithm = "full" if self.n_clusters == 1 else "elkan"
 
     if algorithm not in ["full", "elkan"]:
-        raise ValueError("Algorithm must be 'auto', 'full' or 'elkan', got"
-                         " {}".format(str(algorithm)))
+        raise ValueError(
+            f"Algorithm must be 'auto', 'full' or 'elkan', got {str(algorithm)}"
+        )
+
 
     X_len = _num_samples(X)
 

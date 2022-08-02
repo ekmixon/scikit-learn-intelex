@@ -40,18 +40,16 @@ def _get_host_inputs(*args, **kwargs):
 
 def _extract_usm_iface(*args, **kwargs):
     allargs = (*args, *kwargs.values())
-    if len(allargs) == 0:
-        return None
-    return getattr(allargs[0],
-                   '__sycl_usm_array_interface__',
-                   None)
+    return (
+        getattr(allargs[0], '__sycl_usm_array_interface__', None)
+        if allargs
+        else None
+    )
 
 
 def _run_on_device(func, queue, obj=None, *args, **kwargs):
     def dispatch_by_obj(obj, func, *args, **kwargs):
-        if obj is not None:
-            return func(obj, *args, **kwargs)
-        return func(*args, **kwargs)
+        return func(obj, *args, **kwargs) if obj is not None else func(*args, **kwargs)
 
     if queue is not None:
         from daal4py.oneapi import sycl_context, _get_in_sycl_ctxt

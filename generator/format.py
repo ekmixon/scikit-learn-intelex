@@ -21,26 +21,21 @@
 from collections import defaultdict
 import re
 
-# default values of paramters/inputs are set by daal itself.
-# We indicate with these defaults that we want to use daal's defaults
-pydefaults = defaultdict(lambda: 'None')
-pydefaults.update(
-    {
-        'double': 'get_nan64()',
-        'float': 'get_nan32()',
-        'int': '-1',
-        'long': '-1',
-        'size_t': '-1',
-        'bool': 'False',
-        'std::string': '',
-        #'std::string &' : '""',
-    }
-)
+pydefaults = defaultdict(lambda: 'None') | {
+    'double': 'get_nan64()',
+    'float': 'get_nan32()',
+    'int': '-1',
+    'long': '-1',
+    'size_t': '-1',
+    'bool': 'False',
+    'std::string': '',
+    #'std::string &' : '""',
+}
 
 # Same but when calling C++
 # We actually only need bool for distributed/streaming; the rest is handled in use_default
 cppdefaults = defaultdict(lambda: 'NULL')
-cppdefaults.update({'bool': 'false', })
+cppdefaults['bool'] = 'false'
 
 
 def flat(typ):
@@ -55,16 +50,12 @@ def flat(typ):
                  r'daal::services::SharedPtr<\1Batch>', typ)
     typ = re.sub(r'(daal::)?services::SharedPtr<([^>]+)>', r'\2__iface__', typ)
     nn = typ.split('::')
-    if nn[0] == 'daal':
-        if nn[1] == 'algorithms':
-            r = '_'.join(nn[2:])
-        else:
-            r = '_'.join(nn[1:])
-    elif nn[0] == 'algorithms':
-        r = '_'.join(nn[1:])
+    if nn[0] == 'daal' and nn[1] == 'algorithms':
+        return '_'.join(nn[2:])
+    elif nn[0] in ['daal', 'algorithms']:
+        return '_'.join(nn[1:])
     else:
-        r = '_'.join(nn)
-    return r
+        return '_'.join(nn)
 
 
 def cy_callext(arg, typ_cy, typ_cyext, s2e=None):
@@ -72,18 +63,16 @@ def cy_callext(arg, typ_cy, typ_cyext, s2e=None):
     if 'data_or_file' in typ_cy:
         return 'data_or_file(<PyObject*>{0})'.format(arg)
     if 'dict_numerictable' in typ_cy:
-        return 'make_dnt(<PyObject *>' + arg + ((', ' + s2e) if s2e else '') + ')'
+        return f'make_dnt(<PyObject *>{arg}' + (f', {s2e}' if s2e else '') + ')'
     if 'list_numerictable' in typ_cy:
-        return 'make_datacoll(<PyObject *>' + arg + ')'
+        return f'make_datacoll(<PyObject *>{arg})'
     if 'numerictable' in typ_cy:
-        return 'make_nt(<PyObject *>' + arg + ')'
+        return f'make_nt(<PyObject *>{arg})'
     if any(typ_cy.endswith(x) for x in ['model', '_result']):
-        return arg + '.c_ptr if ' + arg + ' != None else <' + typ_cyext + ' *>0'
+        return f'{arg}.c_ptr if {arg} != None else <{typ_cyext} *>0'
     if any(typ_cy.endswith(x) for x in ['__iface__']):
-        return arg + '.c_ptr.get() if ' + arg + ' != None else <' + typ_cyext + ' *>0'
-    if 'std_string' in typ_cy:
-        return 'to_std_string(<PyObject *>' + arg + ')'
-    return arg
+        return f'{arg}.c_ptr.get() if {arg} != None else <{typ_cyext} *>0'
+    return f'to_std_string(<PyObject *>{arg})' if 'std_string' in typ_cy else arg
 
 
 def mk_var(name='', typ='', const='', dflt=None, inpt=False, algo=None, doc=None):

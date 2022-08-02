@@ -88,27 +88,22 @@ def _daal_type_of_target(y):
     if y.ndim == 2 and y.shape[1] == 0:
         return 'unknown'  # [[]]
 
-    if y.ndim == 2 and y.shape[1] > 1:
-        suffix = "-multioutput"  # [[1, 2], [1, 2]]
-    else:
-        suffix = ""  # [1, 2, 3] or [[1], [2], [3]]
-
+    suffix = "-multioutput" if y.ndim == 2 and y.shape[1] > 1 else ""
     # check float and contains non-integer float values
     if y.dtype.kind == 'f' and np.any(y != y.astype(int)):
         # [.1, .2, 3] or [[.1, .2, 3]] or [[1., .2]] and not [1., 2., 3.]
         _daal_assert_all_finite(y)
-        return 'continuous' + suffix
+        return f'continuous{suffix}'
 
     unique = np.sort(
         pd.unique(
             y.ravel())) if pandas_is_imported else np.unique(y)
 
-    if (len(unique) > 2) or (y.ndim >= 2 and len(y[0]) > 1):
-        # [1, 2, 3] or [[1., 2., 3]] or [[1, 2]]
-        result = ('multiclass' + suffix, None)
-    else:
-        result = ('binary', unique)  # [1, 2] or [["a"], ["b"]]
-    return result
+    return (
+        (f'multiclass{suffix}', None)
+        if (len(unique) > 2) or (y.ndim >= 2 and len(y[0]) > 1)
+        else ('binary', unique)
+    )
 
 
 @support_usm_ndarray(freefunc=True)
@@ -128,10 +123,16 @@ def _daal_roc_auc_score(
 
     _patching_status = PatchingConditionsChain(
         "sklearn.metrics.roc_auc_score")
-    _dal_ready = _patching_status.and_conditions([
-        (y_type[0] == "binary" and not (y_score.ndim == 2 and y_score.shape[1] > 2),
-            "y_true type is not one-dimensional binary.")
-    ])
+    _dal_ready = _patching_status.and_conditions(
+        [
+            (
+                y_type[0] == "binary"
+                and (y_score.ndim != 2 or y_score.shape[1] <= 2),
+                "y_true type is not one-dimensional binary.",
+            )
+        ]
+    )
+
 
     _patching_status.write_log()
     if y_type[0] == "multiclass" or (
@@ -151,11 +152,19 @@ def _daal_roc_auc_score(
 
     if y_type[0] == "binary":
         labels = y_type[1]
-        _dal_ready = _patching_status.and_conditions([
-            (len(labels) == 2, "Number of unique labels is not equal to 2."),
-            (max_fpr is None, "Maximum false-positive rate is not supported."),
-            (sample_weight is None, "Sample weights are not supported.")])
-        if _dal_ready:
+        if _dal_ready := _patching_status.and_conditions(
+            [
+                (
+                    len(labels) == 2,
+                    "Number of unique labels is not equal to 2.",
+                ),
+                (
+                    max_fpr is None,
+                    "Maximum false-positive rate is not supported.",
+                ),
+                (sample_weight is None, "Sample weights are not supported."),
+            ]
+        ):
             if not np.array_equal(labels, [0, 1]) or labels.dtype == np.bool:
                 y_true = label_binarize(y_true, classes=labels)[:, 0]
             result = d4p.daal_roc_auc_score(y_true.reshape(-1, 1),

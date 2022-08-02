@@ -30,9 +30,7 @@ except:
     def read_csv(f, c=None, sr=0, nr=np.iinfo(np.int64).max, t=np.float64):
         res = np.genfromtxt(f, usecols=c, delimiter=',',
                             skip_header=sr, max_rows=nr, dtype=t)
-        if res.ndim == 1:
-            return res[:, np.newaxis]
-        return res
+        return res[:, np.newaxis] if res.ndim == 1 else res
 
 
 def get_chunk_params(lines_count, chunks_count, chunk_number):
@@ -48,7 +46,7 @@ def get_chunk_params(lines_count, chunks_count, chunk_number):
 if __name__ == "__main__":
     infile = "./data/batch/covcormoments_dense.csv"
     chunks_count = 6
-    print('Reading file "{}" in {} chunks'.format(infile, chunks_count))
+    print(f'Reading file "{infile}" in {chunks_count} chunks')
 
     # Read the whole file to be able to compare
     whole_file = read_csv(infile)
@@ -61,7 +59,7 @@ if __name__ == "__main__":
     for chunk_number in range(chunks_count):
         skiprows, nrows = get_chunk_params(lines_in_file, chunks_count, chunk_number)
         chunk = read_csv(infile, sr=skiprows, nr=nrows)
-        print("The shape of chunk number {} is {}".format(chunk_number, chunk.shape))
+        print(f"The shape of chunk number {chunk_number} is {chunk.shape}")
         chunks_stack = np.vstack((chunks_stack, chunk))
 
     assert np.array_equal(chunks_stack, whole_file)

@@ -34,11 +34,8 @@ def main(readcsv=None, method='svdDense'):
     for chunk in rn:
         algo.compute(chunk)
 
-    # finalize computation
-    result = algo.finalize()
-
     # QR result objects provide matrixQ and matrixR
-    return result
+    return algo.finalize()
 
 
 if __name__ == "__main__":

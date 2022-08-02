@@ -19,7 +19,7 @@ import numpy as np
 import daal4py as d4p
 
 dv = d4p._get__daal_link_version__
-daal_version = tuple(map(int, (dv()[0:4], dv()[4:8])))
+daal_version = tuple(map(int, (dv()[:4], dv()[4:8])))
 
 
 class Test(unittest.TestCase):

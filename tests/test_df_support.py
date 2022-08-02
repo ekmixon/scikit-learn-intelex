@@ -121,8 +121,7 @@ class Test(unittest.TestCase):
         X = np.random.randn(13024, 16)
         dt = []
         for i in range(8):
-            dt += [('f' + str(2 * i), np.float64),
-                   ('f' + str(2 * i + 1), np.float32)]
+            dt += [(f'f{str(2 * i)}', np.float64), (f'f{str(2 * i + 1)}', np.float32)]
         X2 = np.empty((X.shape[0],), dtype=np.dtype(dt))
         for i, (n, _) in enumerate(dt):
             X2[n][:] = X[:, i]

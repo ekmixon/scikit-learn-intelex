@@ -32,7 +32,7 @@ from onedal.tests.utils._device_selection import (get_queues,
 
 
 def _replace_and_save(md, fns, replacing_fn):
-    saved = dict()
+    saved = {}
     for check_f in fns:
         try:
             fn = getattr(md, check_f)

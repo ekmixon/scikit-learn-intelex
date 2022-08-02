@@ -35,7 +35,7 @@ def _daal4py_fit(self, X, y_):
     _fptype = getFPType(X)
 
     ridge_params = np.asarray(self.alpha, dtype=X.dtype)
-    if ridge_params.size != 1 and ridge_params.size != y.shape[1]:
+    if ridge_params.size not in [1, y.shape[1]]:
         raise ValueError("alpha length is wrong")
     ridge_params = ridge_params.reshape((1, -1))
 
@@ -117,24 +117,39 @@ def _fit_ridge(self, X, y, sample_weight=None):
                      multi_output=True, y_numeric=True)
     self.n_features_in_ = X.shape[1]
     self.sample_weight_ = sample_weight
-    self.fit_shape_good_for_daal_ = True if X.shape[0] >= X.shape[1] else False
+    self.fit_shape_good_for_daal_ = X.shape[0] >= X.shape[1]
 
     _patching_status = PatchingConditionsChain(
         "sklearn.linear_model.Ridge.fit")
-    _dal_ready = _patching_status.and_conditions([
-        (self.solver == 'auto',
-            f"'{self.solver}' solver is not supported. "
-            "Only 'auto' solver is supported."),
-        (not sp.issparse(X), "X is sparse. Sparse input is not supported."),
-        (self.fit_shape_good_for_daal_,
-            "The shape of X does not satisfy oneDAL requirements: "
-            "number of features > number of samples."),
-        (X.dtype == np.float64 or X.dtype == np.float32,
-            f"'{X.dtype}' X data type is not supported. "
-            "Only np.float32 and np.float64 are supported."),
-        (sample_weight is None, "Sample weights are not supported."),
-        (not (hasattr(self, 'positive') and self.positive),
-            "Forced positive coefficients are not supported.")])
+    _dal_ready = _patching_status.and_conditions(
+        [
+            (
+                self.solver == 'auto',
+                f"'{self.solver}' solver is not supported. "
+                "Only 'auto' solver is supported.",
+            ),
+            (
+                not sp.issparse(X),
+                "X is sparse. Sparse input is not supported.",
+            ),
+            (
+                self.fit_shape_good_for_daal_,
+                "The shape of X does not satisfy oneDAL requirements: "
+                "number of features > number of samples.",
+            ),
+            (
+                X.dtype in [np.float64, np.float32],
+                f"'{X.dtype}' X data type is not supported. "
+                "Only np.float32 and np.float64 are supported.",
+            ),
+            (sample_weight is None, "Sample weights are not supported."),
+            (
+                not (hasattr(self, 'positive') and self.positive),
+                "Forced positive coefficients are not supported.",
+            ),
+        ]
+    )
+
     _patching_status.write_log()
 
     if not _dal_ready:
@@ -170,30 +185,43 @@ def _predict_ridge(self, X):
 
     X = check_array(
         X, accept_sparse=['csr', 'csc', 'coo'], dtype=[np.float64, np.float32])
-    good_shape_for_daal = \
-        True if X.ndim <= 1 else True if X.shape[0] >= X.shape[1] else False
+    good_shape_for_daal = True if X.ndim <= 1 else X.shape[0] >= X.shape[1]
 
     _patching_status = PatchingConditionsChain(
         "sklearn.linear_model.Ridge.predict")
-    _dal_ready = _patching_status.and_conditions([
-        (self.solver == 'auto',
-            f"'{self.solver}' solver is not supported. "
-            "Only 'auto' solver is supported."),
-        (hasattr(self, 'daal_model_'), "oneDAL model was not trained."),
-        (not sp.issparse(X), "X is sparse. Sparse input is not supported."),
-        (good_shape_for_daal,
-            "The shape of X does not satisfy oneDAL requirements: "
-            "number of features > number of samples."),
-        (X.dtype == np.float64 or X.dtype == np.float32,
-            f"'{X.dtype}' X data type is not supported. "
-            "Only np.float32 and np.float64 are supported."),
-        (not hasattr(self, 'sample_weight_') or self.sample_weight_ is None,
-            "Sample weights are not supported.")])
+    _dal_ready = _patching_status.and_conditions(
+        [
+            (
+                self.solver == 'auto',
+                f"'{self.solver}' solver is not supported. "
+                "Only 'auto' solver is supported.",
+            ),
+            (hasattr(self, 'daal_model_'), "oneDAL model was not trained."),
+            (
+                not sp.issparse(X),
+                "X is sparse. Sparse input is not supported.",
+            ),
+            (
+                good_shape_for_daal,
+                "The shape of X does not satisfy oneDAL requirements: "
+                "number of features > number of samples.",
+            ),
+            (
+                X.dtype in [np.float64, np.float32],
+                f"'{X.dtype}' X data type is not supported. "
+                "Only np.float32 and np.float64 are supported.",
+            ),
+            (
+                not hasattr(self, 'sample_weight_')
+                or self.sample_weight_ is None,
+                "Sample weights are not supported.",
+            ),
+        ]
+    )
+
     _patching_status.write_log()
 
-    if not _dal_ready:
-        return self._decision_function(X)
-    return _daal4py_predict(self, X)
+    return _daal4py_predict(self, X) if _dal_ready else self._decision_function(X)
 
 
 class Ridge(Ridge_original, _BaseRidge):

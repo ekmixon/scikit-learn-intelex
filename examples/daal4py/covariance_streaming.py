@@ -34,10 +34,7 @@ def main(readcsv=None, method='defaultDense'):
     for chunk in rn:
         algo.compute(chunk)
 
-    # finalize computation
-    result = algo.finalize()
-
-    return result
+    return algo.finalize()
 
 
 if __name__ == "__main__":

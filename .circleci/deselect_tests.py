@@ -55,7 +55,7 @@ def filter_by_version(entry, sk_ver):
         return None
     test_name, cond = t
     conds = cond.split(',')
-    if all([evaluate_cond(cond, sk_ver) for cond in conds]):
+    if all(evaluate_cond(cond, sk_ver) for cond in conds):
         return test_name
     return None
 

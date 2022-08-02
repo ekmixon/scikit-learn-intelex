@@ -130,8 +130,8 @@ def main(readcsv=read_csv, method='defaultDense'):
 
 if __name__ == "__main__":
     result = main()
-    print("\nFirst 10 cluster assignments:\n", result.assignments[0:10])
-    print("\nFirst 10 cluster core indices:\n", result.coreIndices[0:10])
-    print("\nFirst 10 cluster core observations:\n", result.coreObservations[0:10])
+    print("\nFirst 10 cluster assignments:\n", result.assignments[:10])
+    print("\nFirst 10 cluster core indices:\n", result.coreIndices[:10])
+    print("\nFirst 10 cluster core observations:\n", result.coreObservations[:10])
     print("\nNumber of clusters:\n", result.nClusters)
     print('All looks good!')

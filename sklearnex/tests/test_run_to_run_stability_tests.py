@@ -52,13 +52,13 @@ def method_processing(X, clf, methods):
     for i in methods:
         if i == 'predict':
             res.append(clf.predict(X))
-            name.append(get_class_name(clf) + '.predict(X)')
+            name.append(f'{get_class_name(clf)}.predict(X)')
         elif i == 'predict_proba':
             res.append(clf.predict_proba(X))
-            name.append(get_class_name(clf) + '.predict_proba(X)')
+            name.append(f'{get_class_name(clf)}.predict_proba(X)')
         elif i == 'decision_function':
             res.append(clf.decision_function(X))
-            name.append(get_class_name(clf) + '.decision_function(X)')
+            name.append(f'{get_class_name(clf)}.decision_function(X)')
         elif i == 'kneighbors':
             dist, idx = clf.kneighbors(X)
             res.append(dist)
@@ -68,22 +68,22 @@ def method_processing(X, clf, methods):
         elif i == 'fit_predict':
             predict = clf.fit_predict(X)
             res.append(predict)
-            name.append(get_class_name(clf) + '.fit_predict')
+            name.append(f'{get_class_name(clf)}.fit_predict')
         elif i == 'fit_transform':
             res.append(clf.fit_transform(X))
-            name.append(get_class_name(clf) + '.fit_transform')
+            name.append(f'{get_class_name(clf)}.fit_transform')
         elif i == 'transform':
             res.append(clf.transform(X))
-            name.append(get_class_name(clf) + '.transform(X)')
+            name.append(f'{get_class_name(clf)}.transform(X)')
         elif i == 'get_covariance':
             res.append(clf.get_covariance())
-            name.append(get_class_name(clf) + '.get_covariance()')
+            name.append(f'{get_class_name(clf)}.get_covariance()')
         elif i == 'get_precision':
             res.append(clf.get_precision())
-            name.append(get_class_name(clf) + '.get_precision()')
+            name.append(f'{get_class_name(clf)}.get_precision()')
         elif i == 'score_samples':
             res.append(clf.score_samples(X))
-            name.append(get_class_name(clf) + '.score_samples(X)')
+            name.append(f'{get_class_name(clf)}.score_samples(X)')
     return res, name
 
 
@@ -97,7 +97,7 @@ def func(X, Y, clf, methods):
             if isinstance(ans, np.ndarray) and None in ans:
                 continue
             res.append(ans)
-            name.append(get_class_name(clf) + '.' + i)
+            name.append(f'{get_class_name(clf)}.{i}')
     return res, name
 
 
@@ -122,12 +122,13 @@ def _run_test(model, methods, dataset):
 
     for X, y in datasets:
         baseline, name = func(X, y, model, methods)
-        for i in range(10):
+        for _ in range(10):
             res, _ = func(X, y, model, methods)
 
             for a, b, n in zip(res, baseline, name):
-                np.testing.assert_allclose(a, b, rtol=0.0, atol=0.0,
-                                           err_msg=str(n + " is incorrect"))
+                np.testing.assert_allclose(
+                    a, b, rtol=0.0, atol=0.0, err_msg=str(f"{n} is incorrect")
+                )
 
 
 MODELS_INFO = [
@@ -344,8 +345,13 @@ def test_train_test_split(features):
                                                             random_state=0)
         res = [X_train, X_test, y_train, y_test]
         for a, b in zip(res, baseline):
-            np.testing.assert_allclose(a, b, rtol=0.0, atol=0.0,
-                                       err_msg=str("train_test_split is incorrect"))
+            np.testing.assert_allclose(
+                a,
+                b,
+                rtol=0.0,
+                atol=0.0,
+                err_msg="train_test_split is incorrect",
+            )
 
 
 @pytest.mark.parametrize('metric', ['cosine', 'correlation'])
@@ -356,16 +362,22 @@ def test_pairwise_distances(metric):
     for _ in range(5):
         res = pairwise_distances(X.reshape(1, -1), metric=metric)
         for a, b in zip(res, baseline):
-            np.testing.assert_allclose(a, b, rtol=0.0, atol=0.0,
-                                       err_msg=str("pairwise_distances is incorrect"))
+            np.testing.assert_allclose(
+                a,
+                b,
+                rtol=0.0,
+                atol=0.0,
+                err_msg="pairwise_distances is incorrect",
+            )
 
 
 @pytest.mark.parametrize('array_size', [100, 1000, 10000])
 def test_roc_auc(array_size):
-    a = [random.randint(0, 1) for i in range(array_size)]
-    b = [random.randint(0, 1) for i in range(array_size)]
+    a = [random.randint(0, 1) for _ in range(array_size)]
+    b = [random.randint(0, 1) for _ in range(array_size)]
     baseline = roc_auc_score(a, b)
     for _ in range(5):
         res = roc_auc_score(a, b)
-        np.testing.assert_allclose(baseline, res, rtol=0.0, atol=0.0,
-                                   err_msg=str("roc_auc is incorrect"))
+        np.testing.assert_allclose(
+            baseline, res, rtol=0.0, atol=0.0, err_msg="roc_auc is incorrect"
+        )

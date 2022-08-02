@@ -82,9 +82,9 @@ def main(readcsv=pd_read_csv, method='defaultDense'):
 if __name__ == "__main__":
     (xgb_prediction, xgb_errors_count,
      daal_prediction, daal_errors_count, y_test) = main()
-    print("\nXGBoost prediction results (first 10 rows):\n", xgb_prediction[0:10])
-    print("\ndaal4py prediction results (first 10 rows):\n", daal_prediction[0:10])
-    print("\nGround truth (first 10 rows):\n", y_test[0:10])
+    print("\nXGBoost prediction results (first 10 rows):\n", xgb_prediction[:10])
+    print("\ndaal4py prediction results (first 10 rows):\n", daal_prediction[:10])
+    print("\nGround truth (first 10 rows):\n", y_test[:10])
 
     print("XGBoost errors count:", xgb_errors_count)
     print("XGBoost accuracy score:", 1 - xgb_errors_count / xgb_prediction.shape[0])

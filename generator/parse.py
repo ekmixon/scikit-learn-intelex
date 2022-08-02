@@ -106,7 +106,7 @@ class cpp_class(object):
         assert not partial or tpl
 
     def plus_ns(self):
-        self.name = '{}::{}'.format(self.iface, self.name)
+        self.name = f'{self.iface}::{self.name}'
         return self
 
 ###############################################################################
@@ -125,10 +125,10 @@ class comment_parser(object):
     def parse(self, elem, ctxt):
         # delete comments, after which there is code in one line
         line = re.sub(r'\/\*(.*?)\*\/', '', elem) \
-            if re.match(r'.*\*/(.+)', elem) else elem
+                if re.match(r'.*\*/(.+)', elem) else elem
 
         assert not re.match(r'.*\*/(.+)', line), \
-               "Found the code after closed comment in the same line"
+                   "Found the code after closed comment in the same line"
 
         # delete '%', it marks non-key words in oneDAL Doxygen documentation
         line = line.replace('%', '')
@@ -144,37 +144,26 @@ class comment_parser(object):
 
         # try to find the beginning of algorithm template description
         regex = r'^ \* <a name=\"DAAL-CLASS-ALGORITHMS__.*(BATCH|ALGORITHMIMPL)\"></a>$'
-        m = re.match(regex, line)
-        if m:
+        if m := re.match(regex, line):
             ctxt.doc_state = doc_state.template
             ctxt.doc = defaultdict()
             return True
 
         # if parsing of algorithm template description is in progress
         if ctxt.doc_state is doc_state.template:
-            # try to find template param description
-            m = re.match(r'^\s+\*\s+\\tparam\s+(\w+)\s+(.+)$', line)
-            if m:
-                ctxt.doc[m.group(1)] = m.group(2)
-            # try to find end of algorithm template description
-            m = re.match(r'.*\*/', line)
-            if m:
+            if m := re.match(r'^\s+\*\s+\\tparam\s+(\w+)\s+(.+)$', line):
+                ctxt.doc[m[1]] = m[2]
+            if m := re.match(r'.*\*/', line):
                 ctxt.doc_state = doc_state.none
-            return True
-
-        # if it is still template then go to next line
-        if ctxt.doc_state is doc_state.template:
             return True
 
         # clear the doc, if we will not find doc then we save empty line
         if ctxt.doc_state in [doc_state.single, doc_state.multi]:
             ctxt.doc = ''
 
-        # try to find single line comment with documentation
-        m = re.match(r'^.*/\*!<(.*?)\*/.*$', line)
-        if m:
+        if m := re.match(r'^.*/\*!<(.*?)\*/.*$', line):
             # save the doc to context and continue with next parser
-            ctxt.doc = m.group(1)
+            ctxt.doc = m[1]
             ctxt.doc_state = doc_state.single
             return False
 
@@ -190,14 +179,12 @@ class comment_parser(object):
                 # take the text in the line
                 m = re.match(r'^\s*(.+?)$', line)
             # append found comment to documentation
-            doc[1] += ' ' + m.group(1)
+            doc[1] += ' ' + m[1]
             return True
 
-        # try to find the begin of comment with documentation
-        m = re.match(r'^.*/\*!<(.+?)$', line)
-        if m:
+        if m := re.match(r'^.*/\*!<(.+?)$', line):
             # save the begin of doc to context and continue with next parser
-            ctxt.doc = m.group(1)
+            ctxt.doc = m[1]
             ctxt.doc_state = doc_state.multi
             return False
 
@@ -209,8 +196,8 @@ class ns_parser(object):
     """parse namespace declaration"""
     def parse(self, elem, ctxt):
         m = re.match(r'namespace +(\w+)(.*)', elem)
-        if m and (not m.group(2) or '{' not in m.group(2)):
-            ctxt.gdict['ns'].append(m.group(1))
+        if m and (not m[2] or '{' not in m[2]):
+            ctxt.gdict['ns'].append(m[1])
             return True
         return False
 
@@ -219,8 +206,7 @@ class ns_parser(object):
 class eos_parser(object):
     """detect end of struct/class/enum '};'"""
     def parse(self, elem, ctxt):
-        m = re.match(r'^}\s*;\s*$', elem)
-        if m:
+        if m := re.match(r'^}\s*;\s*$', elem):
             ctxt.enum = False
             ctxt.curr_class = False
             ctxt.access = False
@@ -233,9 +219,8 @@ class eos_parser(object):
 class include_parser(object):
     """parse #include"""
     def parse(self, elem, ctxt):
-        mi = re.match(r'#include\s+[<\"](algorithms/.+?h)[>\"]', elem)
-        if mi:
-            ctxt.gdict['includes'].add(mi.group(1))
+        if mi := re.match(r'#include\s+[<\"](algorithms/.+?h)[>\"]', elem):
+            ctxt.gdict['includes'].add(mi[1])
             return True
         return False
 
@@ -244,13 +229,13 @@ class include_parser(object):
 class typedef_parser(object):
     """Parse a typedef"""
     def parse(self, elem, ctxt):
-        m = re.match(r'\s*typedef(\s+(struct|typename))?\s+(.+)\s+(\w+).*', elem)
-        if m:
+        if m := re.match(
+            r'\s*typedef(\s+(struct|typename))?\s+(.+)\s+(\w+).*', elem
+        ):
             if ctxt.curr_class:
-                ctxt.gdict['classes'][ctxt.curr_class].typedefs[m.group(4).strip()] = \
-                    m.group(3).strip()
+                ctxt.gdict['classes'][ctxt.curr_class].typedefs[m[4].strip()] = m[3].strip()
             else:
-                ctxt.gdict['typedefs'][m.group(4).strip()] = m.group(3).strip()
+                ctxt.gdict['typedefs'][m[4].strip()] = m[3].strip()
             return True
         return False
 
@@ -259,9 +244,8 @@ class typedef_parser(object):
 class enum_parser(object):
     """Parse an enum"""
     def parse(self, elem, ctxt):
-        me = re.match(r'\s*enum +(\w+)\s*', elem)
-        if me:
-            ctxt.enum = me.group(1)
+        if me := re.match(r'\s*enum +(\w+)\s*', elem):
+            ctxt.enum = me[1]
             # we need a deterministic order when generating API
             ctxt.gdict['enums'][ctxt.enum] = OrderedDict()
             return True
@@ -272,13 +256,12 @@ class enum_parser(object):
                 ctxt.enum = False
                 return True
             regex = r'^\s*(\w+)(?:\s*=\s*((\(int\))?\w(\w|:|\s|\+)*))?' + \
-                    r'(\s*,)?\s*((/\*|//).*)?$'
+                        r'(\s*,)?\s*((/\*|//).*)?$'
             me = re.match(regex, elem)
-            if me and not me.group(1).startswith('last'):
+            if me and not me[1].startswith('last'):
                 # save the destination for documentation
-                ctxt.doc_lambda = lambda: ctxt.gdict['enums'][ctxt.enum][me.group(1)]
-                ctxt.gdict['enums'][ctxt.enum][me.group(1)] = \
-                    [me.group(2) if me.group(2) else '', ctxt.doc]
+                ctxt.doc_lambda = lambda: ctxt.gdict['enums'][ctxt.enum][me[1]]
+                ctxt.gdict['enums'][ctxt.enum][me[1]] = [me[2] or '', ctxt.doc]
                 return True
         return False
 
@@ -288,9 +271,8 @@ class access_parser(object):
     """Parse access specifiers"""
     def parse(self, elem, ctxt):
         if ctxt.curr_class:
-            am = re.match(r'\s*(public|private|protected)\s*:\s*', elem)
-            if am:
-                ctxt.access = am.group(1) == 'public'
+            if am := re.match(r'\s*(public|private|protected)\s*:\s*', elem):
+                ctxt.access = am[1] == 'public'
         return False
 
 
@@ -298,9 +280,8 @@ class access_parser(object):
 class step_parser(object):
     """Look for distributed steps"""
     def parse(self, elem, ctxt):
-        m = re.match(r'.*[<, ](step\d+(Master|Local))[>, ].*', elem)
-        if m:
-            ctxt.gdict['steps'].add(m.group(1))
+        if m := re.match(r'.*[<, ](step\d+(Master|Local))[>, ].*', elem):
+            ctxt.gdict['steps'].add(m[1])
         return False
 
 
@@ -318,21 +299,20 @@ class setget_parser(object):
             if mgs:
                 assert not ctxt.template
                 ctxt.gdict['classes'][ctxt.curr_class].setgets.append(
-                    [mgs.group(4), mgs.group(2), mgs.group(6), mgs.group(3)]
+                    [mgs[4], mgs[2], mgs[6], mgs[3]]
                 )
+
                 # map input-enum to object-type and optional arg
-                if mgs.group(4) == 'get':  # a getter
-                    name = mgs.group(6).strip()
-                    if(',' in mgs.group(3)):
-                        arg = mgs.group(3).strip(')').split(',')[1].strip().split(' ')
-                        ctxt.gdict['classes'][ctxt.curr_class].arg_gets[name] = \
-                            (mgs.group(2).strip(), arg)
+                if mgs[4] == 'get':  # a getter
+                    name = mgs[6].strip()
+                    if ',' in mgs[3]:
+                        arg = mgs[3].strip(')').split(',')[1].strip().split(' ')
+                        ctxt.gdict['classes'][ctxt.curr_class].arg_gets[name] = mgs[2].strip(), arg
                     else:
-                        ctxt.gdict['classes'][ctxt.curr_class].gets[name] = \
-                            mgs.group(2).strip()
+                        ctxt.gdict['classes'][ctxt.curr_class].gets[name] = mgs[2].strip()
                 else:  # a setter
-                    args = mgs.group(3).split('{')[0].strip(')').strip().split(',')
-                    name = mgs.group(6).strip()
+                    args = mgs[3].split('{')[0].strip(')').strip().split(',')
+                    name = mgs[6].strip()
                     typ = args[-1].replace('const', '').strip().split(' ')[0].strip()
                     if len(args) > 2:
                         val = args[1].strip().split(' ')
@@ -341,28 +321,27 @@ class setget_parser(object):
                         ctxt.gdict['classes'][ctxt.curr_class].sets[name] = typ
                 return True
             regex = r'\s*(?:(?:virtual|DAAL_EXPORT)\s*)?((\w|:|<|>)+)' + \
-                    r'([*&]\s+|\s+[&*]|\s+)(get\w+)\(\s*\)'
+                        r'([*&]\s+|\s+[&*]|\s+)(get\w+)\(\s*\)'
             mgs = re.match(regex, elem)
             if mgs:
-                name = mgs.group(4)
+                name = mgs[4]
                 if name not in ['getSerializationTag']:
                     if ctxt.template and name.startswith('get'):
                         assert len(ctxt.template) == 1 and \
-                               ctxt.template[0][1] == 'fptypes'
+                                   ctxt.template[0][1] == 'fptypes'
                         ctxt.gdict['classes'][ctxt.curr_class].gets[name] = \
-                            ('double', '<double>')
+                                ('double', '<double>')
                         return False
-                    ctxt.gdict['classes'][ctxt.curr_class].gets[name] = mgs.group(1)
+                    ctxt.gdict['classes'][ctxt.curr_class].gets[name] = mgs[1]
                     return True
             # some get-methods accept an argument!
             # We support only a single argument for now,
             # and only simple types like int, size_t etc, no refs, no pointers
             regex = r'\s*(?:virtual\s*)?((\w|:|<|>)+)([*&]\s+|\s+[&*]|\s+)' + \
-                    r'(get\w+)\(\s*((?:\w|_)+)\s+((?:\w|_)+)\s*\)'
+                        r'(get\w+)\(\s*((?:\w|_)+)\s+((?:\w|_)+)\s*\)'
             mgs = re.match(regex, elem)
-            if mgs and mgs.group(4) not in ['getResult', 'getInput']:
-                ctxt.gdict['classes'][ctxt.curr_class].gets[mgs.group(4)] = \
-                    (mgs.group(1), mgs.group(5), mgs.group(6))
+            if mgs and mgs[4] not in ['getResult', 'getInput']:
+                ctxt.gdict['classes'][ctxt.curr_class].gets[mgs[4]] = mgs[1], mgs[5], mgs[6]
                 return True
         return False
 
@@ -377,8 +356,8 @@ class result_parser(object):
                                                              'Distributed']):
             regex = r'\s*(?:(?:virtual|const)\s+)?((\w|::|< *| *>)+)\s+(getResult\w*).+'
             m = re.match(regex, elem)
-            if m and not m.group(3).endswith('Impl') and 'return' not in m.group(1):
-                ctxt.gdict['classes'][ctxt.curr_class].result = (m.group(1), m.group(3))
+            if m and not m[3].endswith('Impl') and 'return' not in m[1]:
+                ctxt.gdict['classes'][ctxt.curr_class].result = m[1], m[3]
         return False
 
 
@@ -388,16 +367,15 @@ class member_parser(object):
     def parse(self, elem, ctxt):
         if ctxt.curr_class and ctxt.access:
             regex = r'\s*((?:[\w:_]|< ?| ?>| ?, ?)+)(?<!return|delete)' + \
-                    r'\s+[\*&]?\s*([\w_]+)\s*;'
-            mm = re.match(regex, elem)
-            if mm:
-                if mm.group(2) not in ctxt.gdict['classes'][ctxt.curr_class].members:
+                        r'\s+[\*&]?\s*([\w_]+)\s*;'
+            if mm := re.match(regex, elem):
+                if mm[2] not in ctxt.gdict['classes'][ctxt.curr_class].members:
                     # save the destination for documentation
                     ctxt.doc_lambda = lambda: ctxt.gdict['classes'][
                         ctxt.curr_class
-                    ].members[mm.group(2)]
-                    ctxt.gdict['classes'][ctxt.curr_class].members[mm.group(2)] = \
-                        [mm.group(1), ctxt.doc]
+                    ].members[mm[2]]
+
+                    ctxt.gdict['classes'][ctxt.curr_class].members[mm[2]] = [mm[1], ctxt.doc]
                 return True
         return False
 

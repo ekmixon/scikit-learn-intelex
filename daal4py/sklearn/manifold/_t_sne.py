@@ -115,10 +115,9 @@ class TSNE(BaseTSNE):
         if self._learning_rate == 'auto':
             self._learning_rate = X.shape[0] / self.early_exaggeration / 4
             self._learning_rate = np.maximum(self._learning_rate, 50)
-        else:
-            if not (self._learning_rate > 0):
-                raise ValueError("'learning_rate' must be a positive number "
-                                 "or 'auto'.")
+        elif self._learning_rate <= 0:
+            raise ValueError("'learning_rate' must be a positive number "
+                             "or 'auto'.")
 
         if hasattr(self, 'square_distances'):
             if self.square_distances not in [True, 'legacy']:
@@ -134,20 +133,28 @@ class TSNE(BaseTSNE):
                               FutureWarning)
 
         if self.method == 'barnes_hut':
-            if sklearn_check_version('0.23'):
-                X = self._validate_data(X, accept_sparse=['csr'],
-                                        ensure_min_samples=2,
-                                        dtype=[np.float32, np.float64])
-            else:
-                X = check_array(X, accept_sparse=['csr'], ensure_min_samples=2,
-                                dtype=[np.float32, np.float64])
+            X = (
+                self._validate_data(
+                    X,
+                    accept_sparse=['csr'],
+                    ensure_min_samples=2,
+                    dtype=[np.float32, np.float64],
+                )
+                if sklearn_check_version('0.23')
+                else check_array(
+                    X,
+                    accept_sparse=['csr'],
+                    ensure_min_samples=2,
+                    dtype=[np.float32, np.float64],
+                )
+            )
+
+        elif sklearn_check_version('0.23'):
+            X = self._validate_data(X, accept_sparse=['csr', 'csc', 'coo'],
+                                    dtype=[np.float32, np.float64])
         else:
-            if sklearn_check_version('0.23'):
-                X = self._validate_data(X, accept_sparse=['csr', 'csc', 'coo'],
-                                        dtype=[np.float32, np.float64])
-            else:
-                X = check_array(X, accept_sparse=['csr', 'csc', 'coo'],
-                                dtype=[np.float32, np.float64])
+            X = check_array(X, accept_sparse=['csr', 'csc', 'coo'],
+                            dtype=[np.float32, np.float64])
 
         if self.metric == "precomputed":
             if isinstance(self._init, str) and self._init == 'pca':
@@ -172,8 +179,10 @@ class TSNE(BaseTSNE):
         random_state = check_random_state(self.random_state)
 
         if self.early_exaggeration < 1.0:
-            raise ValueError("early_exaggeration must be at least 1, but is {}"
-                             .format(self.early_exaggeration))
+            raise ValueError(
+                f"early_exaggeration must be at least 1, but is {self.early_exaggeration}"
+            )
+
 
         if self.n_iter < 250:
             raise ValueError("n_iter should be at least 250")
@@ -206,8 +215,9 @@ class TSNE(BaseTSNE):
                 raise ValueError("All distances should be positive, the "
                                  "metric given is not correct")
 
-            if self.metric != "euclidean" and \
-                    getattr(self, 'square_distances', True) is True:
+            if self.metric != "euclidean" and getattr(
+                self, 'square_distances', True
+            ):
                 distances **= 2
 
             # compute the joint probability distribution for the input space
@@ -225,8 +235,7 @@ class TSNE(BaseTSNE):
             n_neighbors = min(n_samples - 1, int(3. * self.perplexity + 1))
 
             if self.verbose:
-                print("[t-SNE] Computing {} nearest neighbors..."
-                      .format(n_neighbors))
+                print(f"[t-SNE] Computing {n_neighbors} nearest neighbors...")
 
             # Find the nearest neighbors for every point
             knn = NearestNeighbors(
@@ -252,8 +261,10 @@ class TSNE(BaseTSNE):
             # Free the memory used by the ball_tree
             del knn
 
-            if getattr(self, 'square_distances', True) is True or \
-                    self.metric == "euclidean":
+            if (
+                getattr(self, 'square_distances', True)
+                or self.metric == "euclidean"
+            ):
                 # knn return the euclidean distance but we need it squared
                 # to be consistent with the 'exact' method. Note that the
                 # the method was derived using the euclidean method as in the

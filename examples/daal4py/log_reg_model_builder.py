@@ -45,20 +45,22 @@ def main():
     return (builder, predict_result_daal)
 
 
-if __name__ == "__main__":
-    if daal_check_version(((2021, 'P', 1))):
-        (builder, predict_result_daal) = main()
-        print("\nLogistic Regression coefficients:\n", builder.model)
-        print(
-            "\nLogistic regression prediction results (first 10 rows):\n",
-            predict_result_daal.prediction[0:10]
-        )
-        print(
-            "\nLogistic regression prediction probabilities (first 10 rows):\n",
-            predict_result_daal.probabilities[0:10]
-        )
-        print(
-            "\nLogistic regression prediction log probabilities (first 10 rows):\n",
-            predict_result_daal.logProbabilities[0:10]
-        )
-        print('All looks good!')
+if __name__ == "__main__" and daal_check_version(((2021, 'P', 1))):
+    (builder, predict_result_daal) = main()
+    print("\nLogistic Regression coefficients:\n", builder.model)
+    print(
+        "\nLogistic regression prediction results (first 10 rows):\n",
+        predict_result_daal.prediction[:10],
+    )
+
+    print(
+        "\nLogistic regression prediction probabilities (first 10 rows):\n",
+        predict_result_daal.probabilities[:10],
+    )
+
+    print(
+        "\nLogistic regression prediction log probabilities (first 10 rows):\n",
+        predict_result_daal.logProbabilities[:10],
+    )
+
+    print('All looks good!')

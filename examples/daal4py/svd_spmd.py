@@ -24,7 +24,7 @@ from numpy import loadtxt, allclose
 
 def main():
     # Each process gets its own data
-    infile = "./data/distributed/svd_{}.csv".format(d4p.my_procid() + 1)
+    infile = f"./data/distributed/svd_{d4p.my_procid() + 1}.csv"
 
     # configure a SVD object
     algo = d4p.svd(distributed=True)

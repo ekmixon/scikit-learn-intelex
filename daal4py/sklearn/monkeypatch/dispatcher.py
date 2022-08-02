@@ -103,25 +103,23 @@ def _get_map_of_algorithms():
 
 def do_patch(name, get_map=_get_map_of_algorithms):
     lname = name.lower()
-    if lname in get_map():
-        for descriptor in get_map()[lname]:
-            which, what, replacer = descriptor[0]
-            if descriptor[1] is None:
-                descriptor[1] = getattr(which, what, None)
-            setattr(which, what, replacer)
-    else:
-        raise ValueError("Has no patch for: " + name)
+    if lname not in get_map():
+        raise ValueError(f"Has no patch for: {name}")
+    for descriptor in get_map()[lname]:
+        which, what, replacer = descriptor[0]
+        if descriptor[1] is None:
+            descriptor[1] = getattr(which, what, None)
+        setattr(which, what, replacer)
 
 
 def do_unpatch(name, get_map=_get_map_of_algorithms):
     lname = name.lower()
-    if lname in get_map():
-        for descriptor in get_map()[lname]:
-            if descriptor[1] is not None:
-                which, what, _ = descriptor[0]
-                setattr(which, what, descriptor[1])
-    else:
-        raise ValueError("Has no patch for: " + name)
+    if lname not in get_map():
+        raise ValueError(f"Has no patch for: {name}")
+    for descriptor in get_map()[lname]:
+        if descriptor[1] is not None:
+            which, what, _ = descriptor[0]
+            setattr(which, what, descriptor[1])
 
 
 def enable(name=None, verbose=True, deprecation=True, get_map=_get_map_of_algorithms):

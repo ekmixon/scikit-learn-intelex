@@ -45,12 +45,9 @@ def main(readcsv=read_csv, method='defaultDense'):
     # configure a em_gmm object
     algo2 = d4p.em_gmm(nComponents)
 
-    # and compute em_gmm using initial weights and means
-    result2 = algo2.compute(data, result1.weights, result1.means, result1.covariances)
-
     # implicit als prediction result objects provide covariances,
     # goalFunction, means, nIterations and weights
-    return result2
+    return algo2.compute(data, result1.weights, result1.means, result1.covariances)
 
 
 if __name__ == "__main__":

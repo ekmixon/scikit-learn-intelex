@@ -58,5 +58,5 @@ def main(readcsv=read_csv, method='defaultDense'):
 if __name__ == "__main__":
     result1 = main()
     print('Confidence: (20 first)')
-    print(result1.confidence[0:20])
+    print(result1.confidence[:20])
     print('All looks good!')

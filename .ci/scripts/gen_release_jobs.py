@@ -37,11 +37,14 @@ res_enum = {}
 for channel in CHANNELS:
     for python_version in PYTHON_VERSIONS:
         for os in SYSTEMS:
-            res_key = channel + ' - ' + 'python' + python_version + ' - ' + os
-            res_enum[res_key] = {}
-            res_enum[res_key]['python.version'] = python_version
-            res_enum[res_key]['imageName'] = os
-            res_enum[res_key]['conda.activate'] = ACTIVATE[os]
-            res_enum[res_key]['conda.channel'] = channel
+            res_key = f'{channel} - python{python_version} - {os}'
+            res_enum[res_key] = {
+                'python.version': python_version,
+                'imageName': os,
+                'conda.activate': ACTIVATE[os],
+                'conda.channel': channel,
+            }
 
-sys.stderr.write("##vso[task.setVariable variable=legs;isOutput=true]{}".format(res_enum))
+sys.stderr.write(
+    f"##vso[task.setVariable variable=legs;isOutput=true]{res_enum}"
+)

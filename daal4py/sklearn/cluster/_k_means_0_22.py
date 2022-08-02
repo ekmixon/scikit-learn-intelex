@@ -108,21 +108,24 @@ def _daal4py_kmeans_compatibility(nClusters, maxIterations, fptype="double",
                                   resultsToEvaluate="computeCentroids"):
     kmeans_algo = None
     if daal_check_version(((2020, 'P', 2), (2021, 'B', 107))):
-        kmeans_algo = daal4py.kmeans(nClusters=nClusters,
-                                     maxIterations=maxIterations,
-                                     fptype=fptype,
-                                     resultsToEvaluate=resultsToEvaluate,
-                                     accuracyThreshold=accuracyThreshold,
-                                     method=method)
-    else:
-        assigFlag = 'computeAssignments' in resultsToEvaluate
-        kmeans_algo = daal4py.kmeans(nClusters=nClusters,
-                                     maxIterations=maxIterations,
-                                     fptype=fptype,
-                                     assignFlag=assigFlag,
-                                     accuracyThreshold=accuracyThreshold,
-                                     method=method)
-    return kmeans_algo
+        return daal4py.kmeans(
+            nClusters=nClusters,
+            maxIterations=maxIterations,
+            fptype=fptype,
+            resultsToEvaluate=resultsToEvaluate,
+            accuracyThreshold=accuracyThreshold,
+            method=method,
+        )
+
+    assigFlag = 'computeAssignments' in resultsToEvaluate
+    return daal4py.kmeans(
+        nClusters=nClusters,
+        maxIterations=maxIterations,
+        fptype=fptype,
+        assignFlag=assigFlag,
+        accuracyThreshold=accuracyThreshold,
+        method=method,
+    )
 
 
 def _daal4py_k_means_predict(X, nClusters, centroids,
@@ -159,7 +162,7 @@ def _daal4py_k_means_fit(X, nClusters, numIterations,
         resultsToEvaluate='computeCentroids',
         method='defaultDense')
 
-    for k in range(n_init):
+    for _ in range(n_init):
         deterministic, starting_centroids_ = _daal4py_compute_starting_centroids(
             X, X_fptype, nClusters, cluster_centers_0, random_state)
 
@@ -235,14 +238,14 @@ def _fit(self, X, y=None, sample_weight=None):
             (self.n_clusters <= X_len,
                 "The number of clusters is larger than the number of samples in X.")
         ])
-        if _dal_ready and sample_weight is not None:
-            sample_weight = np.asarray(sample_weight)
-            _dal_ready = _patching_status.and_conditions([
-                (sample_weight.shape == (X_len,),
-                    "Sample weights do not have the same length as X."),
-                (np.allclose(sample_weight, np.ones_like(sample_weight)),
-                    "Sample weights are not ones.")
-            ])
+    if _dal_ready and sample_weight is not None:
+        sample_weight = np.asarray(sample_weight)
+        _dal_ready = _patching_status.and_conditions([
+            (sample_weight.shape == (X_len,),
+                "Sample weights do not have the same length as X."),
+            (np.allclose(sample_weight, np.ones_like(sample_weight)),
+                "Sample weights are not ones.")
+        ])
 
     _patching_status.write_log()
     if not _dal_ready:
